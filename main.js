@@ -40,7 +40,6 @@ function createMainWindow() {
 }
 
 function checkForUpdates() {
-    // Sadece üretim (build edilmiş exe) sürümünde çalışsın
     if (!app.isPackaged) return;
 
     autoUpdater.checkForUpdatesAndNotify();
@@ -49,8 +48,18 @@ function checkForUpdates() {
         dialog.showMessageBox({
             type: 'info',
             title: 'Güncelleme Bulundu',
-            message: 'Yeni bir sürüm mevcut. İndiriliyor...',
+            message: 'Yeni bir sürüm bulundu, indiriliyor...',
         });
+    });
+
+    // 🔥 BURADA yüzde ilerlemesini yakalıyoruz
+    autoUpdater.on('download-progress', (progressObj) => {
+        let log_message = `İndiriliyor: ${progressObj.percent.toFixed(1)}%`;
+        if (mainWindow) {
+            mainWindow.setProgressBar(progressObj.percent / 100); // görev çubuğunda bar gösterir
+            mainWindow.webContents.send('update-progress', progressObj.percent); // render'a gönder
+        }
+        console.log(log_message);
     });
 
     autoUpdater.on('update-downloaded', () => {
@@ -68,15 +77,3 @@ function checkForUpdates() {
         console.error('Güncelleme hatası:', err);
     });
 }
-
-const mainMenuTemplate = [
-    {
-        label: "Dosya",
-        submenu: [
-            { label: "Yenile", role: "reload" },
-            { label: "Geliştirici Araçları", role: "toggleDevTools" },
-            { type: "separator" },
-            { label: "Çıkış", role: "quit" }
-        ]
-    }
-];

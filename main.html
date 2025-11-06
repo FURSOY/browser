@@ -17,7 +17,21 @@
 
     <webview id="webview" src=""></webview>
 
+    <div id="update-container"
+        style="position: fixed; bottom: 10px; right: 10px; background: #222; color: white; padding: 10px 15px; border-radius: 8px; display: none; font-family: sans-serif;">
+        Güncelleme indiriliyor... <span id="update-percent">0%</span>
+    </div>
     <script>
+        window.electronAPI.onUpdateProgress((percent) => {
+            const container = document.getElementById('update-container');
+            const percentText = document.getElementById('update-percent');
+            container.style.display = 'block';
+            percentText.textContent = `${percent.toFixed(1)}%`;
+
+            if (percent >= 100) {
+                container.textContent = "Güncelleme indirildi! Yeniden başlatılıyor...";
+            }
+        });
         document.addEventListener("DOMContentLoaded", () => {
             const searchBtn = document.getElementById("search-btn");
             const searchInput = document.getElementById("search-input");
