@@ -1,11 +1,16 @@
-const electron = require('electron');
-const url = require('url');
+const { app, BrowserWindow, Menu, dialog } = require('electron');
+const { autoUpdater } = require("electron-updater");
 const path = require('path');
-const { app, BrowserWindow, Menu } = electron;
+const url = require('url');
 
 let mainWindow;
 
 app.on('ready', () => {
+    createMainWindow();
+    checkForUpdates();
+});
+
+function createMainWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -18,32 +23,59 @@ app.on('ready', () => {
         },
     });
 
-    console.log(process.platform);
-
     mainWindow.loadURL(
         url.format({
             pathname: path.join(__dirname, "main.html"),
             protocol: "file:",
             slashes: true
         })
-    )
+    );
 
-    const mainMenu = Menu.buildFromTemplate(mainMenuTemplate)
+    Menu.setApplicationMenu(null);
 
-    Menu.setApplicationMenu(null)
-})
+    mainWindow.on("closed", () => {
+        mainWindow = null;
+    });
+}
+
+function checkForUpdates() {
+    // Sadece üretim (build edilmiş exe) sürümünde çalışsın
+    if (!app.isPackaged) return;
+
+    autoUpdater.checkForUpdatesAndNotify();
+
+    autoUpdater.on('update-available', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            title: 'Güncelleme Bulundu',
+            message: 'Yeni bir sürüm mevcut. İndiriliyor...',
+        });
+    });
+
+    autoUpdater.on('update-downloaded', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            title: 'Güncelleme Hazır',
+            message: 'Yeni sürüm indirildi. Şimdi yeniden başlatmak ister misiniz?',
+            buttons: ['Evet', 'Hayır']
+        }).then(result => {
+            if (result.response === 0) autoUpdater.quitAndInstall();
+        });
+    });
+
+    autoUpdater.on('error', (err) => {
+        console.error('Güncelleme hatası:', err);
+    });
+}
 
 const mainMenuTemplate = [
     {
-        label: "lalla",
+        label: "Dosya",
         submenu: [
-            {
-                label: "Yadssa"
-            },
-            {
-                label: "Çıkış",
-                role: "quit"
-            }
+            { label: "Yenile", role: "reload" },
+            { label: "Geliştirici Araçları", role: "toggleDevTools" },
+            { type: "separator" },
+            { label: "Çıkış", role: "quit" }
         ]
     }
-]
+];
