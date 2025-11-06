@@ -17,26 +17,42 @@
 
     <webview id="webview" src=""></webview>
 
-    <div id="update-container"
-        style="position: fixed; bottom: 10px; right: 10px; background: #222; color: white; padding: 10px 15px; border-radius: 8px; display: none; font-family: sans-serif;">
+    <!-- 🔹 Güncelleme Bilgisi -->
+    <div id="update-container" style="display: none;">
         Güncelleme indiriliyor... <span id="update-percent">0%</span>
+        <div id="update-progress-bar">
+            <div id="update-progress-fill"></div>
+        </div>
     </div>
+    <div id="version-label">Yükleniyor...</div>
+
+
     <script>
         window.electronAPI.onUpdateProgress((percent) => {
             const container = document.getElementById('update-container');
             const percentText = document.getElementById('update-percent');
+            const fill = document.getElementById('update-progress-fill');
+
             container.style.display = 'block';
             percentText.textContent = `${percent.toFixed(1)}%`;
+            fill.style.width = `${percent}%`;
 
             if (percent >= 100) {
                 container.textContent = "Güncelleme indirildi! Yeniden başlatılıyor...";
             }
         });
+
         document.addEventListener("DOMContentLoaded", () => {
             const searchBtn = document.getElementById("search-btn");
             const searchInput = document.getElementById("search-input");
             const webview = document.getElementById("webview");
             const searchPage = document.getElementById("search-page");
+            const versionLabel = document.getElementById("version-label");
+
+            // 🔹 Preload üzerinden versiyon bilgisi göster
+            if (window.appInfo?.version) {
+                versionLabel.textContent = `v${window.appInfo.version}`;
+            }
 
             function search() {
                 const query = searchInput.value.trim();

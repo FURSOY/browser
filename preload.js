@@ -1,5 +1,6 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge } = require('electron');
+const packageJson = require('../package.json');
 
-contextBridge.exposeInMainWorld('electronAPI', {
-    onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (event, percent) => callback(percent))
+contextBridge.exposeInMainWorld('appInfo', {
+    version: packageJson.version
 });
