@@ -44,6 +44,10 @@ body {
     transition: 0.2s;
 }
 
+#Search-Title {
+    user-select: none;
+}
+
 #search-btn:hover {
     background-color: #e0e0e0;
 }
