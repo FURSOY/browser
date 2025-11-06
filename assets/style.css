@@ -91,12 +91,15 @@ body {
     transition: width 0.2s ease-in-out;
 }
 
-/* Versiyon Etiketi */
 #version-label {
     position: fixed;
     bottom: 10px;
     left: 15px;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.7);
+    user-select: none;
+}
+
+#Search-Title {
     user-select: none;
 }
