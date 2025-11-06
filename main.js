@@ -7,10 +7,14 @@ let mainWindow;
 
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        backgroundColor: "#000000",
         webPreferences: {
-            nodeIntegration: false, // güvenlik için
-            contextIsolation: true, // güvenlik için
-            webviewTag: true,       // <webview> aktif et!
+            preload: path.join(__dirname, "preload.js"),
+            nodeIntegration: false,
+            contextIsolation: true,
+            webviewTag: true,
         },
     });
 

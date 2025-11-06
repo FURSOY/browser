@@ -1,15 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarayıcı</title>
+    <title>FURSOY Browser</title>
     <link rel="stylesheet" href="assets/style.css">
 </head>
 
 <body>
-    <webview id="webview" src="https://www.google.com"></webview>
+    <div id="search-page">
+        <h1>FURSOY Browser</h1>
+        <input type="text" id="search-input" placeholder="Google'da ara...">
+        <button id="search-btn">Ara</button>
+    </div>
+
+    <webview id="webview" src=""></webview>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const searchBtn = document.getElementById("search-btn");
+            const searchInput = document.getElementById("search-input");
+            const webview = document.getElementById("webview");
+            const searchPage = document.getElementById("search-page");
+
+            function search() {
+                const query = searchInput.value.trim();
+                if (!query) return;
+                const searchUrl = `https://www.google.com/search?igu=1&q=${encodeURIComponent(query)}`;
+                webview.src = searchUrl;
+                searchPage.style.display = "none";
+            }
+
+            searchBtn.addEventListener("click", search);
+            searchInput.addEventListener("keypress", e => {
+                if (e.key === "Enter") search();
+            });
+
+            webview.addEventListener("did-finish-load", () => {
+                webview.style.opacity = "1";
+                webview.style.visibility = "visible";
+            });
+        });
+    </script>
 </body>
 
 </html>
