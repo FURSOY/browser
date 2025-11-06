@@ -17,7 +17,6 @@
 
     <webview id="webview" src=""></webview>
 
-    <!-- 🔹 Güncelleme Bilgisi -->
     <div id="update-container" style="display: none;">
         Güncelleme indiriliyor... <span id="update-percent">0%</span>
         <div id="update-progress-bar">
@@ -25,8 +24,6 @@
         </div>
     </div>
     <div id="version-label">Yükleniyor...</div>
-
-
     <script>
         window.electronAPI.onUpdateProgress((percent) => {
             const container = document.getElementById('update-container');
