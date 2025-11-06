@@ -1,6 +1,6 @@
 {
   "name": "browser",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "FURSOY Browser",
   "main": "main.js",
   "author": "FURSOY",
@@ -23,7 +23,7 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.png"
     },
     "nsis": {
       "oneClick": false,

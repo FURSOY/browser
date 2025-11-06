@@ -47,8 +47,8 @@
             const versionLabel = document.getElementById("version-label");
 
             // 🔹 Preload üzerinden versiyon bilgisi göster
-            if (window.appInfo?.version) {
-                versionLabel.textContent = `v${window.appInfo.version}`;
+            if (window.electronAPI?.version) {
+                versionLabel.textContent = `v${window.electronAPI.version}`;
             }
 
             function search() {
