@@ -74,6 +74,8 @@
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: all 0.2s;
+            position: relative;
+            min-width: 120px;
         }
 
         #search-btn:hover {
@@ -83,6 +85,31 @@
 
         #search-btn:active {
             transform: translateY(0);
+        }
+
+        #search-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         webview {
@@ -207,7 +234,7 @@
         </div>
     </div>
 
-    <div id="version-label">v1.0.0</div>
+    <div id="version-label">v0.0.0</div>
 
     <script>
         const searchBtn = document.getElementById("search-btn");
