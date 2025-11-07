@@ -5,70 +5,307 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FURSOY Browser</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #search-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+
+        #search-page.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #Search-Title {
+            color: white;
+            font-size: 48px;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #search-input {
+            width: 500px;
+            max-width: 90%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            outline: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        #search-input:focus {
+            transform: scale(1.02);
+        }
+
+        #search-btn {
+            margin-top: 20px;
+            padding: 12px 40px;
+            font-size: 16px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        #search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #search-btn:active {
+            transform: translateY(0);
+        }
+
+        webview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+        }
+
+        webview.loaded {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Güncelleme bildirimi - SAĞ ALTTA */
+        #update-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            min-width: 280px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        #update-container.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        #update-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        #update-info {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        #update-percent {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4CAF50;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        #update-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        #update-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        #version-label {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            z-index: 999;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+    </style>
 </head>
 
 <body>
     <div id="search-page">
         <h1 id="Search-Title">FURSOY Browser</h1>
-        <input type="text" id="search-input" placeholder="Google'da ara...">
+        <input type="text" id="search-input" placeholder="Google'da ara veya URL girin...">
         <button id="search-btn">Ara</button>
     </div>
 
-    <webview id="webview" src=""></webview>
+    <webview id="webview" src="" partition="persist:main"></webview>
 
-    <div id="update-container" style="display: none;">
-        Güncelleme indiriliyor... <span id="update-percent">0%</span>
+    <!-- Güncelleme bildirimi -->
+    <div id="update-container">
+        <div id="update-title">Güncelleme İndiriliyor</div>
+        <div id="update-info">
+            <span id="update-speed">0 MB/s</span> •
+            <span id="update-size">0 / 0 MB</span>
+        </div>
+        <span id="update-percent">0%</span>
         <div id="update-progress-bar">
             <div id="update-progress-fill"></div>
         </div>
     </div>
-    <div id="version-label">Yükleniyor...</div>
+
+    <div id="version-label">v0.0.0</div>
+
     <script>
-        window.electronAPI.onUpdateProgress((percent) => {
-            const container = document.getElementById('update-container');
-            const percentText = document.getElementById('update-percent');
-            const fill = document.getElementById('update-progress-fill');
+        const searchBtn = document.getElementById("search-btn");
+        const searchInput = document.getElementById("search-input");
+        const webview = document.getElementById("webview");
+        const searchPage = document.getElementById("search-page");
+        const versionLabel = document.getElementById("version-label");
+        const updateContainer = document.getElementById("update-container");
+        const updatePercent = document.getElementById("update-percent");
+        const updateFill = document.getElementById("update-progress-fill");
+        const updateSpeed = document.getElementById("update-speed");
+        const updateSize = document.getElementById("update-size");
+        const updateTitle = document.getElementById("update-title");
 
-            container.style.display = 'block';
-            percentText.textContent = `${percent.toFixed(1)}%`;
-            fill.style.width = `${percent}%`;
+        // Versiyon bilgisini göster
+        if (window.electronAPI?.version) {
+            versionLabel.textContent = `v${window.electronAPI.version}`;
+        }
 
-            if (percent >= 100) {
-                container.textContent = "Güncelleme indirildi! Yeniden başlatılıyor...";
+        // Güncelleme ilerlemesi
+        window.electronAPI.onUpdateProgress((data) => {
+            updateContainer.classList.add('show');
+            updatePercent.textContent = `${data.percent.toFixed(1)}%`;
+            updateFill.style.width = `${data.percent}%`;
+
+            // Hız göster
+            const speedMB = (data.bytesPerSecond / 1024 / 1024).toFixed(2);
+            updateSpeed.textContent = `${speedMB} MB/s`;
+
+            // Boyut göster
+            const transferredMB = (data.transferred / 1024 / 1024).toFixed(1);
+            const totalMB = (data.total / 1024 / 1024).toFixed(1);
+            updateSize.textContent = `${transferredMB} / ${totalMB} MB`;
+        });
+
+        // Güncelleme durumu
+        window.electronAPI.onUpdateStatus((status) => {
+            if (status === 'downloading') {
+                updateContainer.classList.add('show');
+                updateTitle.textContent = 'Güncelleme İndiriliyor';
+            } else if (status === 'downloaded') {
+                updateTitle.textContent = 'Güncelleme Tamamlandı!';
+                updatePercent.textContent = '100%';
+                setTimeout(() => {
+                    updateContainer.classList.remove('show');
+                }, 3000);
+            } else if (status === 'error') {
+                updateTitle.textContent = 'Güncelleme Hatası';
+                updateContainer.style.background = 'rgba(244, 67, 54, 0.9)';
+                setTimeout(() => {
+                    updateContainer.classList.remove('show');
+                    updateContainer.style.background = 'rgba(0, 0, 0, 0.9)';
+                }, 3000);
             }
         });
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const searchBtn = document.getElementById("search-btn");
-            const searchInput = document.getElementById("search-input");
-            const webview = document.getElementById("webview");
-            const searchPage = document.getElementById("search-page");
-            const versionLabel = document.getElementById("version-label");
+        function search() {
+            const query = searchInput.value.trim();
+            if (!query) return;
 
-            // 🔹 Preload üzerinden versiyon bilgisi göster
-            if (window.electronAPI?.version) {
-                versionLabel.textContent = `v${window.electronAPI.version}`;
+            let url;
+            // URL kontrolü - daha gelişmiş
+            if (query.match(/^https?:\/\//)) {
+                url = query;
+            } else if (query.includes('.') && !query.includes(' ')) {
+                url = 'https://' + query;
+            } else {
+                url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
             }
 
-            function search() {
-                const query = searchInput.value.trim();
-                if (!query) return;
-                const searchUrl = `https://www.google.com/search?igu=1&q=${encodeURIComponent(query)}`;
-                webview.src = searchUrl;
-                searchPage.style.display = "none";
-            }
+            webview.src = url;
+            searchPage.classList.add('hidden');
 
-            searchBtn.addEventListener("click", search);
-            searchInput.addEventListener("keypress", e => {
-                if (e.key === "Enter") search();
-            });
+            // Animasyon bitince gizle
+            setTimeout(() => {
+                searchPage.style.display = 'none';
+            }, 300);
+        }
 
-            webview.addEventListener("did-finish-load", () => {
-                webview.style.opacity = "1";
-                webview.style.visibility = "visible";
-            });
+        searchBtn.addEventListener("click", search);
+        searchInput.addEventListener("keypress", e => {
+            if (e.key === "Enter") search();
         });
+
+        // Webview yüklenince göster
+        webview.addEventListener("did-finish-load", () => {
+            webview.classList.add('loaded');
+        });
+
+        // Webview hata durumu
+        webview.addEventListener("did-fail-load", (e) => {
+            if (e.errorCode !== -3) { // -3 = iptal edildi, bunu yok say
+                console.error('Sayfa yüklenemedi:', e.errorDescription);
+            }
+        });
+
+        // Başlangıçta input'a odaklan
+        searchInput.focus();
     </script>
 </body>
 
