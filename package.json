@@ -16,7 +16,8 @@
     "AppId": "com.fursoybrowser.fursoy",
     "productName": "FURSOY Browser",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/icon.ico"
     },
     "directories": {
       "output": "dist"

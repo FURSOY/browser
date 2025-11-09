@@ -2,18 +2,17 @@ class ViewBase {
     bridge;
 
     constructor() {
-        this.bridge = window.Bridge;
+        this.bridge = window.bridge;
+
         this.attachEvents();
     }
 
-    //Document element selector
     get(el) {
         return document.querySelector(el);
     }
-
     getAll(els) {
-        return document.querySelectorAll(el);
+        return document.querySelectorAll(els);
     }
-
-    attachEvents() { }
 }
+
+module.exports = ViewBase;

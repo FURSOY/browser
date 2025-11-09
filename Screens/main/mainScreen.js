@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, globalShortcut } = require("electron");
+
 const path = require("path");
 
 class MainScreen {
@@ -14,17 +15,19 @@ class MainScreen {
         this.window = new BrowserWindow({
             width: this.position.width,
             height: this.position.height,
-            title: "This is a test application",
+            title: "FURSOY Browser",
+            icon: path.join(__dirname, "../../assets/icon.ico"),
             show: false,
             removeMenu: true,
-            acceptFirstMouse: true,
+            acceptFirstMouse: false,
+            // autoHideMenuBar: true → Menü çubuğunu otomatik gizle
+            // Alt tuşuna basınca görünür
             autoHideMenuBar: true,
             webPreferences: {
                 contextIsolation: true,
                 preload: path.join(__dirname, "./mainPreload.js"),
             },
         });
-
         this.window.once("ready-to-show", () => {
             this.window.show();
 
@@ -34,13 +37,12 @@ class MainScreen {
         });
 
         this.handleMessages();
-
         let wc = this.window.webContents;
-        wc.openDevTools({ mode: "undocked" });
 
-        this.window.loadFile("./screens/main/main.html");
+        // wc.openDevTools({ mode: "undocked" });
+
+        this.window.loadFile("./Screens/main/main.html");
     }
-
     showMessage(message) {
         console.log("showMessage trapped");
         console.log(message);
@@ -55,9 +57,7 @@ class MainScreen {
     hide() {
         this.window.hide();
     }
-
     handleMessages() {
-        //Ipc functions go here.
     }
 }
 
