@@ -39,14 +39,17 @@ class MainScreen {
         this.handleMessages();
         let wc = this.window.webContents;
 
-        // wc.openDevTools({ mode: "undocked" });
+        wc.openDevTools({ mode: "undocked" });
+
+        // wc.on('did-finish-load', () => {
+        //     this.sendNotification('Sayfa yüklendi! Bu bildirim MainScreen\'den geldi.');
+        // });
 
         this.window.loadFile("./Screens/main/main.html");
     }
-    showMessage(message) {
-        console.log("showMessage trapped");
-        console.log(message);
-        this.window.webContents.send("updateMessage", message);
+
+    sendNotification(message) {
+        this.window.webContents.send("show-notification", message);
     }
 
     close() {

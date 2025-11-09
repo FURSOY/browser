@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 let bridge = {
-    updateMessage: (callback) => ipcRenderer.on("updateMessage", callback),
+    onShowNotification: (callback) => ipcRenderer.on("show-notification", callback),
 };
 contextBridge.exposeInMainWorld("bridge", bridge);

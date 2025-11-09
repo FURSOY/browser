@@ -1,0 +1,42 @@
+#notification-container[hidden] {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+#notification-container {
+    display: flex;
+    position: fixed;
+    width: 200px;
+    height: 150px;
+    bottom: 10px;
+    right: 10px;
+    border: 1px solid black;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    z-index: 9999;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+#notification-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: black;
+    cursor: pointer;
+    font-weight: bold;
+}
