@@ -1,75 +1,28 @@
 {
-  "name": "fursoy-browser",
+  "name": "browser",
   "version": "1.0.0",
-  "description": "FURSOY Browser - Modern ve Hızlı Web Tarayıcı",
   "main": "main.js",
-  "author": "FURSOY",
-  "license": "MIT",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux",
-    "publish": "electron-builder --publish always"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "build": {
-    "appId": "com.fursoy.browser",
+    "AppId": "com.fursoybrowser.fursoy",
     "productName": "FURSOY Browser",
-    "directories": {
-      "output": "dist",
-      "buildResources": "assets"
-    },
-    "files": [
-      "main.js",
-      "main.html",
-      "preload.js",
-      "assets/**/*",
-      "!assets/*.psd",
-      "!assets/*.ai"
-    ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
-      ],
-      "icon": "assets/icon.png",
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "target": "nsis"
     },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowElevation": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "FURSOY Browser",
-      "installerIcon": "assets/icon.png",
-      "uninstallerIcon": "assets/icon.png",
-      "installerHeaderIcon": "assets/icon.png",
-      "deleteAppDataOnUninstall": false
-    },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "FURSOY",
-        "repo": "browser",
-        "releaseType": "release"
-      }
-    ],
-    "compression": "maximum",
-    "asar": true
+    "directories": {
+      "output": "dist"
+    }
   },
-  "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.13.3"
-  },
+  "keywords": [],
+  "author": "FURSOY",
+  "license": "ISC",
+  "description": "FURSOY Browser",
   "dependencies": {
-    "electron-updater": "^6.1.8"
+    "electron": "^39.1.1",
+    "electron-builder": "^26.0.12",
+    "electron-updater": "^6.6.2",
+    "nodemon": "^3.1.10"
   }
 }

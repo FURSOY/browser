@@ -1,43 +1,56 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
-const { autoUpdater } = require('electron-updater');
-const path = require('path');
+const { app, BrowserWindow, ipcMain, ipcRenderer } = require("electron");
+const MainScreen = require("./screens/main/mainScreen");
+const Globals = require("./globals");
+const { autoUpdater, AppUpdater } = require("electron-updater");
 
-let mainWindow;
+let curWindow;
 
-function createWindow() {
-    mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        backgroundColor: "#000",
-        icon: path.join(__dirname, "assets", "icon.png"),
-        webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
-            contextIsolation: true,
-            nodeIntegration: false,
-            webviewTag: true,
-            allowRunningInsecureContent: false,
-            webSecurity: true
-        }
-    });
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
 
-    mainWindow.loadFile("main.html");
-    Menu.setApplicationMenu(null);
-
-    // Geliştirici araçlarını aç (isteğe bağlı)
-    // mainWindow.webContents.openDevTools();
-
-    mainWindow.on("closed", () => mainWindow = null);
+const createWindow = () => {
+    curWindow = new MainScreen();
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    createWindow();
 
-app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") app.quit();
+    app.on("activate", function () {
+        if (BrowserWindow.getAllWindows().length == 0) createWindow();
+    });
+
+    autoUpdater.checkForUpdates();
+    curWindow.showMessage(`Checking for updates. Current version ${app.getVersion()}`);
 });
 
-app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+/*New Update Available*/
+autoUpdater.on("update-available", (info) => {
+    curWindow.showMessage(`Update available. Current version ${app.getVersion()}`);
+    let pth = autoUpdater.downloadUpdate();
+    curWindow.showMessage(pth);
 });
 
-// Otomatik güncelleme (opsiyonel)
-autoUpdater.checkForUpdatesAndNotify();
+autoUpdater.on("update-not-available", (info) => {
+    curWindow.showMessage(`No update available. Current version ${app.getVersion()}`);
+});
+
+/*Download Completion Message*/
+autoUpdater.on("update-downloaded", (info) => {
+    curWindow.showMessage(`Update downloaded. Current version ${app.getVersion()}`);
+});
+
+autoUpdater.on("error", (info) => {
+    curWindow.showMessage(info);
+});
+
+
+
+
+//Global exception handler
+process.on("uncaughtException", function (err) {
+    console.log(err);
+});
+
+app.on("window-all-closed", function () {
+    if (process.platform != "darwin") app.quit();
+});
