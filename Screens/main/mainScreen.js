@@ -104,7 +104,13 @@ class MainScreen {
     }
 
     sendNotification(message) {
-        this.window.webContents.send("show-notification", message);
+        if (this.window.webContents.isLoading()) {
+            this.window.webContents.once('did-finish-load', () => {
+                this.window.webContents.send("show-notification", message);
+            });
+        } else {
+            this.window.webContents.send("show-notification", message);
+        }
     }
 
     close() {
