@@ -28,7 +28,8 @@ function showNotification(message, time) {
 }
 
 window.bridge.onShowNotification((event, message) => {
-    showNotification(message);
+    // Show notification and set it to hide after 5 seconds.
+    showNotification(message, 5000);
 });
 
 // document.addEventListener('DOMContentLoaded', () => {

@@ -8,5 +8,6 @@ let bridge = {
     navReload: () => ipcRenderer.send('nav-reload'),
     onURLUpdate: (callback) => ipcRenderer.on('update-address-bar', callback),
     navHome: () => ipcRenderer.send('nav-home'),
+    onSetVersion: (callback) => ipcRenderer.on('set-version', callback),
 };
 contextBridge.exposeInMainWorld("bridge", bridge);

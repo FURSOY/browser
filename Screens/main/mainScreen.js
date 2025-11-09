@@ -91,6 +91,15 @@ class MainScreen {
         let wc = this.window.webContents;
         wc.openDevTools({ mode: "undocked" });
 
+        // Send app version to renderer once the main window loads
+        wc.on('did-finish-load', () => {
+            wc.send('set-version', app.getVersion());
+        });
+
+        this.view.webContents.on('did-finish-load', () => {
+            this.view.webContents.send('set-version', app.getVersion());
+        });
+
         this.window.loadFile("./Screens/main/main.html");
     }
 

@@ -40,3 +40,16 @@
     cursor: pointer;
     font-weight: bold;
 }
+
+#version-info {
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    display: flex;
+    color: #a0a0a0;
+    font-size: 12px;
+    font-family: sans-serif;
+    z-index: 1000;
+    visibility: visible;
+    opacity: 1;
+}
