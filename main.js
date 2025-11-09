@@ -32,7 +32,7 @@ autoUpdater.on("update-downloaded", (info) => {
 });
 
 autoUpdater.on("error", (info) => {
-    curWindow.sendNotification("Güncelemehatasi", info);
+    curWindow.sendNotification(`Güncelemehatasi ${info}`);
 });
 
 process.on("uncaughtException", function (err) {

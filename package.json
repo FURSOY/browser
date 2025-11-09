@@ -13,7 +13,7 @@
     "releaseType": "release"
   },
   "build": {
-    "AppId": "com.fursoybrowser.fursoy",
+    "appId": "com.fursoybrowser.fursoy",
     "productName": "FURSOY Browser",
     "win": {
       "target": "nsis",
