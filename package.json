@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "repository": "https://github.com/FURSOY/browser",
+  "publish": {
+    "provider": "github",
+    "releaseType": "release"
   },
   "build": {
     "AppId": "com.fursoybrowser.fursoy",
@@ -20,9 +27,11 @@
   "license": "ISC",
   "description": "FURSOY Browser",
   "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
     "electron": "^39.1.1",
     "electron-builder": "^26.0.12",
-    "electron-updater": "^6.6.2",
     "nodemon": "^3.1.10"
   }
 }
