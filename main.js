@@ -24,7 +24,7 @@ autoUpdater.on("update-available", (info) => {
 });
 
 autoUpdater.on("update-not-available", (info) => {
-    curWindow.sendNotification(`No update available. Current version ${app.getVersion()}`);
+    curWindow.sendNotification(`Güncelleme Bulunamadı. Current version ${app.getVersion()}`);
 });
 
 autoUpdater.on("update-downloaded", (info) => {
@@ -32,7 +32,7 @@ autoUpdater.on("update-downloaded", (info) => {
 });
 
 autoUpdater.on("error", (info) => {
-    curWindow.sendNotification(`Güncelemehatasi ${info}`);
+    curWindow.sendNotification(`Günceleme hatası ${info}`);
 });
 
 process.on("uncaughtException", function (err) {
