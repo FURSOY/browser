@@ -1,8 +1,8 @@
-
+// Versiyon bilgisi şimdi search.html'de gösterilecek
 window.bridge.onSetVersion((event, version) => {
     const versionEl = document.getElementById('version-info');
     if (versionEl) {
-        versionEl.textContent = `Version: ${version}`;
+        versionEl.textContent = `Versiyon: ${version}`;
     }
 });
 

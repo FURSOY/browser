@@ -31,29 +31,25 @@ class MainScreen {
         });
 
         // --- Google Warm-up ---
-        // Create a hidden BrowserView to pre-load Google and speed up the first search.
         const warmupView = new BrowserView();
         warmupView.webContents.loadURL('https://www.google.com');
         warmupView.webContents.on('did-finish-load', () => {
-            // Once loaded, we don't need it anymore. Destroy it to free up resources.
             try {
                 warmupView.destroy();
             } catch (e) {
-                // It might already be destroyed, which is fine.
+                // Ignore if already destroyed
             }
         });
-        // We don't attach this view to any window, it just lives in the background.
 
-        // Create and set the BrowserView
         this.view = new BrowserView({
             webPreferences: {
-                preload: path.join(__dirname, "./mainPreload.js"),
+                contextIsolation: true, // BrowserView için de contextIsolation açık olmalı
+                preload: path.join(__dirname, "./mainPreload.js"), // Aynı preload script'i kullanılıyor
             }
         });
         this.window.setBrowserView(this.view);
-        
+
         const searchPagePath = path.join(__dirname, './search.html');
-        // Set initial bounds and load URL
         const contentBounds = this.window.getContentBounds();
         this.view.setBounds({ x: 0, y: CONTROLS_HEIGHT, width: contentBounds.width, height: contentBounds.height - CONTROLS_HEIGHT });
         this.view.webContents.loadURL(searchPagePath);
@@ -65,23 +61,22 @@ class MainScreen {
             }
         });
 
-        // Handle window resizing
         this.window.on('resize', () => {
             const contentBounds = this.window.getContentBounds();
             this.view.setBounds({ x: 0, y: CONTROLS_HEIGHT, width: contentBounds.width, height: contentBounds.height - CONTROLS_HEIGHT });
         });
 
-        // Sync address bar on navigation
         this.view.webContents.on('did-navigate', (event, navigatedUrl) => {
             let finalUrl = '';
             try {
                 const navigatedPath = path.normalize(url.fileURLToPath(navigatedUrl));
-                // If the path is not our search page, show the URL.
                 if (navigatedPath !== path.normalize(searchPagePath)) {
                     finalUrl = navigatedUrl;
+                } else {
+                    // Eğer search.html'e geri dönüldüyse, URL çubuğunu boşalt
+                    finalUrl = '';
                 }
             } catch (e) {
-                // If it's not a file URL, it's a regular web page, so show the URL.
                 finalUrl = navigatedUrl;
             }
             this.window.webContents.send('update-address-bar', finalUrl);
@@ -89,29 +84,36 @@ class MainScreen {
 
         this.handleMessages();
         let wc = this.window.webContents;
-        wc.openDevTools({ mode: "undocked" });
+        // wc.openDevTools({ mode: "undocked" });
 
-        // Send app version to renderer once the main window loads
-        wc.on('did-finish-load', () => {
-            wc.send('set-version', app.getVersion());
-        });
+        this.window.loadFile("./Screens/main/main.html");
 
+        // BrowserView yüklendiğinde versiyon bilgisini searchView'e gönder
         this.view.webContents.on('did-finish-load', () => {
             this.view.webContents.send('set-version', app.getVersion());
         });
-
-        this.window.loadFile("./Screens/main/main.html");
     }
 
-    sendNotification(message) {
-        if (this.window.webContents.isLoading()) {
-            this.window.webContents.once('did-finish-load', () => {
-                this.window.webContents.send("show-notification", message);
-            });
-        } else {
-            this.window.webContents.send("show-notification", message);
+    sendNotification(message, autoHide = true) {
+        this.window.webContents.send("show-notification", { message, autoHide });
+    }
+
+    sendProgress(percent) {
+        this.window.webContents.send("update-progress", percent);
+    }
+
+    // Versiyon bilgisini gönderme metodu, artık main.html'e değil, BrowserView'a (search.html) gönderecek
+    sendVersion(version) {
+        // BrowserView (search.html) yüklendiğinde versiyon bilgisini gönder
+        this.view.webContents.once('did-finish-load', () => {
+            this.view.webContents.send('set-version', version);
+        });
+        // Eğer BrowserView zaten yüklüyse doğrudan gönder
+        if (!this.view.webContents.isLoading()) {
+            this.view.webContents.send('set-version', version);
         }
     }
+
 
     close() {
         this.window.close();

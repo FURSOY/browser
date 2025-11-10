@@ -19,10 +19,21 @@
 
     <!-- The BrowserView will be placed below this control bar by main.js -->
 
-    <div id="notification-container" hidden>
-        <p id="notification-message">mesaj</p>
-        <button id="notification-close-btn">X</button>
+    <!-- Güncelleme bildirimleri bu kapsayıcıda listelenecek -->
+    <div id="notifications-list-container">
+        <div id="notifications-list">
+            <!-- Bildirimler buraya dinamik olarak eklenecek -->
+        </div>
     </div>
+
+    <!-- İndirme ilerlemesi için -->
+    <div id="download-progress-container">
+        <div id="download-progress-bar"></div>
+        <span id="download-progress-text"></span>
+    </div>
+
+    <!-- Versiyon bilgisi main.html'den kaldırıldı -->
+    <!-- <div id="version-info">Versiyon: Yükleniyor...</div> -->
 
 
     <script defer src="./mainView.js"></script>

@@ -1,55 +1,187 @@
-#notification-container[hidden] {
-    opacity: 0;
-    visibility: hidden;
+/* Bildirim listesi kapsayıcısı */
+#notifications-list-container {
+    position: fixed;
+    bottom: 10px;
+    /* Altta */
+    right: 10px;
+    /* Sağda */
+    width: 280px;
+    /* Bildirim genişliği */
+    max-height: 80vh;
+    /* Maksimum yükseklik */
+    overflow-y: auto;
+    /* Bildirimler artarsa kaydırma çubuğu */
+    display: flex;
+    flex-direction: column-reverse;
+    /* Yeni bildirimler üste eklensin diye */
+    gap: 10px;
+    /* Bildirimler arası boşluk */
+    z-index: 9999;
     pointer-events: none;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
+    /* Mouse olaylarını geçirme */
 }
 
-#notification-container {
+#notifications-list-container[hidden] {
+    display: none;
+}
+
+#notifications-list {
     display: flex;
-    position: fixed;
-    width: 200px;
-    height: 150px;
-    bottom: 10px;
-    right: 10px;
-    border: 1px solid black;
-    align-items: center;
-    justify-content: center;
-    background: white;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+    /* Sağda hizala */
+}
+
+.notification-item {
+    background: #333;
+    /* Koyu tema */
+    color: white;
+    padding: 12px 15px;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    /* Kapsayıcıya göre tam genişlik */
     opacity: 1;
     visibility: visible;
+    transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: auto;
-    z-index: 9999;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
+    /* Kapatma butonuna basılabilir olsun */
+    min-height: 40px;
 }
 
-#notification-close-btn {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
+.notification-item .notification-message {
+    margin: 0;
+    flex-grow: 1;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-item .notification-close-btn {
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 0 5px;
+}
+
+.notification-item .notification-close-btn:hover {
+    color: white;
+}
+
+/* İndirme İlerlemesi */
+#download-progress-container {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    /* Sol altta */
+    width: 250px;
+    height: 25px;
+    background-color: #555;
+    border-radius: 5px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
-    background: transparent;
-    color: black;
-    cursor: pointer;
-    font-weight: bold;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 9998;
+    /* Bildirimlerden biraz daha altta */
 }
 
-#version-info {
+#download-progress-container.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+#download-progress-bar {
+    height: 100%;
+    background-color: #007bff;
+    /* Mavi ilerleme çubuğu */
+    width: 0%;
+    transition: width 0.2s ease-out;
     position: absolute;
-    bottom: 5px;
+    left: 0;
+    top: 0;
+}
+
+#download-progress-text {
+    position: relative;
+    /* Yazının ilerleme çubuğunun üstünde olması için */
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+/* main.html'deki versiyon bilgisi kaldırıldığı için bu stil de kaldırıldı */
+/* #version-info {
+    position: fixed;
+    bottom: 40px;
     left: 10px;
-    display: flex;
     color: #a0a0a0;
     font-size: 12px;
     font-family: sans-serif;
-    z-index: 1000;
-    visibility: visible;
-    opacity: 1;
+    z-index: 9997;
+} */
+
+/* Mevcut tarayıcı kontrolleri */
+#browser-controls {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    background-color: #282c34;
+    /* Darker background for controls */
+    border-bottom: 1px solid #3c4043;
+    height: 40px;
+    /* Defined height */
+    -webkit-app-region: drag;
+    /* Make this draggable to move window */
+}
+
+#browser-controls button {
+    -webkit-app-region: no-drag;
+    /* Buttons are not draggable */
+    background-color: #3c4043;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#browser-controls button:hover {
+    background-color: #5f6368;
+}
+
+#address-bar {
+    -webkit-app-region: no-drag;
+    flex-grow: 1;
+    margin: 0 10px;
+    padding: 5px 10px;
+    border: 1px solid #5f6368;
+    border-radius: 5px;
+    background-color: #3c4043;
+    color: white;
+    font-size: 14px;
+}
+
+#address-bar:focus {
+    outline: none;
+    border-color: #8ab4f8;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    /* Prevent scrollbars from appearing due to fixed elements */
 }

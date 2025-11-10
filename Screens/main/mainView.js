@@ -1,42 +1,82 @@
-let notificationTimeout;
+// Bildirimleri yönetmek için yeni bir yapı
+const MAX_NOTIFICATIONS = 3; // Aynı anda gösterilecek maksimum bildirim sayısı
 
-function showNotification(message, time) {
-    const container = document.getElementById('notification-container');
-    const messageEl = document.getElementById('notification-message');
-    const closeBtn = document.getElementById('notification-close-btn');
+function createNotificationElement(message, id) {
+    const notificationEl = document.createElement('div');
+    notificationEl.id = id;
+    notificationEl.classList.add('notification-item');
+    notificationEl.innerHTML = `
+        <p class="notification-message">${message}</p>
+        <button class="notification-close-btn">X</button>
+    `;
 
-    if (!container || !messageEl || !closeBtn) {
-        console.error('Bildirim için gerekli HTML elementleri bulunamadı.');
-        return;
-    }
-    messageEl.textContent = message;
-    container.removeAttribute('hidden');
-
-    clearTimeout(notificationTimeout);
-
-    if (time > 0) {
-        notificationTimeout = setTimeout(() => {
-            container.setAttribute('hidden', '');
-        }, time);
-    }
-
+    const closeBtn = notificationEl.querySelector('.notification-close-btn');
     closeBtn.onclick = () => {
-        clearTimeout(notificationTimeout);
-        container.setAttribute('hidden', '');
-        messageEl.textContent = "";
+        notificationEl.remove();
+        // Eğer bu bildirim için bir timeout varsa onu da temizle
+        const timeoutId = notificationEl.dataset.timeoutId;
+        if (timeoutId) {
+            clearTimeout(parseInt(timeoutId));
+        }
     };
+    return notificationEl;
 }
 
-window.bridge.onShowNotification((event, message) => {
-    // Show notification and set it to hide after 5 seconds.
-    showNotification(message, 5000);
+window.bridge.onShowNotification((event, { message, autoHide }) => {
+    const notificationsList = document.getElementById('notifications-list');
+    if (!notificationsList) {
+        console.error('Bildirim listesi için gerekli HTML elementi bulunamadı.');
+        return;
+    }
+
+    // Maksimum bildirim sayısını aşmamak için en eskiyi kaldır
+    while (notificationsList.children.length >= MAX_NOTIFICATIONS) {
+        notificationsList.removeChild(notificationsList.firstElementChild);
+    }
+
+    const notificationId = `notification-${Date.now()}`;
+    const notificationEl = createNotificationElement(message, notificationId);
+    notificationsList.appendChild(notificationEl);
+
+    // Otomatik gizleme etkinse bir timeout ayarla
+    if (autoHide) {
+        const timeout = setTimeout(() => {
+            notificationEl.remove();
+        }, 5000); // 5 saniye sonra kaybolsun
+        notificationEl.dataset.timeoutId = timeout; // Timeout ID'yi elemente kaydet
+    }
 });
 
-// document.addEventListener('DOMContentLoaded', () => {
-//     setTimeout(() => {
-//         showNotification('Bu bir test bildirimidir!', 0);
-//     }, 3000);
+// İndirme ilerlemesi için
+window.bridge.onUpdateProgress((event, percent) => {
+    const progressContainer = document.getElementById('download-progress-container');
+    const progressBar = document.getElementById('download-progress-bar');
+    const progressText = document.getElementById('download-progress-text');
+
+    if (!progressContainer || !progressBar || !progressText) {
+        console.error('İlerleme çubuğu için gerekli HTML elementleri bulunamadı.');
+        return;
+    }
+
+    if (percent > 0 && percent < 100) {
+        progressContainer.classList.add('active');
+        progressBar.style.width = percent + '%';
+        progressText.textContent = `${percent.toFixed(1)}% İndiriliyor`;
+    } else {
+        progressContainer.classList.remove('active');
+        progressBar.style.width = '0%';
+        progressText.textContent = '';
+    }
+});
+
+// Versiyon bilgisini göstermek için bu bölüm kaldırıldı, searchView'e taşındı.
+// window.bridge.onSetVersion((event, version) => {
+//     const versionEl = document.getElementById('version-info');
+//     if (versionEl) {
+//         versionEl.textContent = `Versiyon: ${version}`;
+//     }
 // });
+
 
 // --- Address Bar Logic ---
 const addressBar = document.getElementById('address-bar');
@@ -60,7 +100,7 @@ if (addressBar) {
             } else {
                 url = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
             }
-            
+
             window.bridge.navigateTo(url);
         }
     });

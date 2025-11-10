@@ -42,17 +42,17 @@
             border-color: #8ab4f8;
         }
 
+        /* Versiyon bilgisinin search.html içinde sol altta görünmesi için */
         #version-info {
             position: absolute;
-            bottom: 5px;
+            bottom: 10px;
+            /* Altta */
             left: 10px;
-            display: flex;
+            /* Solda */
             color: #a0a0a0;
             font-size: 12px;
             font-family: sans-serif;
             z-index: 1000;
-            visibility: visible;
-            opacity: 1;
         }
     </style>
 </head>
@@ -64,7 +64,8 @@
             <input type="text" id="search-input" placeholder="Search Google..." autofocus>
         </form>
 
-        <div id="version-info">dadsa</div>
+        <!-- Versiyon bilgisi buraya taşındı -->
+        <div id="version-info">Versiyon: Yükleniyor...</div>
     </div>
     <script defer src="./searchView.js"></script>
 </body>
