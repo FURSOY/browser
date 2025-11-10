@@ -75,62 +75,14 @@
     color: white;
 }
 
-/* İndirme İlerlemesi */
-#download-progress-container {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    /* Sol altta */
-    width: 250px;
-    height: 25px;
-    background-color: #555;
-    border-radius: 5px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 9998;
-    /* Bildirimlerden biraz daha altta */
-}
+/* main.html'deki indirme ilerlemesi stilleri kaldırıldı */
+/* #download-progress-container { ... } */
+/* #download-progress-container.active { ... } */
+/* #download-progress-bar { ... } */
+/* #download-progress-text { ... } */
 
-#download-progress-container.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-#download-progress-bar {
-    height: 100%;
-    background-color: #007bff;
-    /* Mavi ilerleme çubuğu */
-    width: 0%;
-    transition: width 0.2s ease-out;
-    position: absolute;
-    left: 0;
-    top: 0;
-}
-
-#download-progress-text {
-    position: relative;
-    /* Yazının ilerleme çubuğunun üstünde olması için */
-    color: white;
-    font-size: 13px;
-    font-weight: bold;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-}
-
-/* main.html'deki versiyon bilgisi kaldırıldığı için bu stil de kaldırıldı */
-/* #version-info {
-    position: fixed;
-    bottom: 40px;
-    left: 10px;
-    color: #a0a0a0;
-    font-size: 12px;
-    font-family: sans-serif;
-    z-index: 9997;
-} */
+/* main.html'deki versiyon bilgisi stilleri kaldırıldı */
+/* #version-info { ... } */
 
 /* Mevcut tarayıcı kontrolleri */
 #browser-controls {

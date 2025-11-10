@@ -1,10 +1,9 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 let bridge = {
-    // onShowNotification artık bir obje alacak: { message: string, autoHide: boolean }
     onShowNotification: (callback) => ipcRenderer.on("show-notification", callback),
-    onUpdateProgress: (callback) => ipcRenderer.on("update-progress", callback), // Yeni eklendi
-    onSetVersion: (callback) => ipcRenderer.on('set-version', callback), // main.html için taşındı (şimdilik bu preload'da kalacak, searchView kullanacak)
+    onUpdateProgress: (callback) => ipcRenderer.on("update-progress", callback), // Hala burada kalacak, çünkü hem main hem search kullanabilir
+    onSetVersion: (callback) => ipcRenderer.on('set-version', callback),
 
     navigateTo: (url) => ipcRenderer.send('navigate-to', url),
     navBack: () => ipcRenderer.send('nav-back'),

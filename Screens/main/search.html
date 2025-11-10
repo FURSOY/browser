@@ -54,6 +54,51 @@
             font-family: sans-serif;
             z-index: 1000;
         }
+
+        /* İndirme İlerlemesi - search.html içinde sağ altta */
+        #download-progress-container {
+            position: absolute;
+            /* fixed yerine absolute, kapsayıcıya göre konumlandırma için */
+            bottom: 10px;
+            right: 10px;
+            /* Sağ altta */
+            width: 250px;
+            height: 25px;
+            background-color: #555;
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 9998;
+        }
+
+        #download-progress-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #download-progress-bar {
+            height: 100%;
+            background-color: #007bff;
+            /* Mavi ilerleme çubuğu */
+            width: 0%;
+            transition: width 0.2s ease-out;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        #download-progress-text {
+            position: relative;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 
@@ -64,8 +109,13 @@
             <input type="text" id="search-input" placeholder="Search Google..." autofocus>
         </form>
 
-        <!-- Versiyon bilgisi buraya taşındı -->
         <div id="version-info">Versiyon: Yükleniyor...</div>
+
+        <!-- İndirme ilerlemesi buraya taşındı -->
+        <div id="download-progress-container">
+            <div id="download-progress-bar"></div>
+            <span id="download-progress-text"></span>
+        </div>
     </div>
     <script defer src="./searchView.js"></script>
 </body>

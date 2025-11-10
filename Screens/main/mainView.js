@@ -47,27 +47,27 @@ window.bridge.onShowNotification((event, { message, autoHide }) => {
     }
 });
 
-// İndirme ilerlemesi için
-window.bridge.onUpdateProgress((event, percent) => {
-    const progressContainer = document.getElementById('download-progress-container');
-    const progressBar = document.getElementById('download-progress-bar');
-    const progressText = document.getElementById('download-progress-text');
+// İndirme ilerlemesi için olan kısım searchView.js'e taşındı.
+// window.bridge.onUpdateProgress((event, percent) => {
+//     const progressContainer = document.getElementById('download-progress-container');
+//     const progressBar = document.getElementById('download-progress-bar');
+//     const progressText = document.getElementById('download-progress-text');
 
-    if (!progressContainer || !progressBar || !progressText) {
-        console.error('İlerleme çubuğu için gerekli HTML elementleri bulunamadı.');
-        return;
-    }
+//     if (!progressContainer || !progressBar || !progressText) {
+//         console.error('İlerleme çubuğu için gerekli HTML elementleri bulunamadı.');
+//         return;
+//     }
 
-    if (percent > 0 && percent < 100) {
-        progressContainer.classList.add('active');
-        progressBar.style.width = percent + '%';
-        progressText.textContent = `${percent.toFixed(1)}% İndiriliyor`;
-    } else {
-        progressContainer.classList.remove('active');
-        progressBar.style.width = '0%';
-        progressText.textContent = '';
-    }
-});
+//     if (percent > 0 && percent < 100) {
+//         progressContainer.classList.add('active');
+//         progressBar.style.width = percent + '%';
+//         progressText.textContent = `${percent.toFixed(1)}% İndiriliyor`;
+//     } else {
+//         progressContainer.classList.remove('active');
+//         progressBar.style.width = '0%';
+//         progressText.textContent = '';
+//     }
+// });
 
 // Versiyon bilgisini göstermek için bu bölüm kaldırıldı, searchView'e taşındı.
 // window.bridge.onSetVersion((event, version) => {

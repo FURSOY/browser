@@ -43,8 +43,8 @@ class MainScreen {
 
         this.view = new BrowserView({
             webPreferences: {
-                contextIsolation: true, // BrowserView için de contextIsolation açık olmalı
-                preload: path.join(__dirname, "./mainPreload.js"), // Aynı preload script'i kullanılıyor
+                contextIsolation: true,
+                preload: path.join(__dirname, "./mainPreload.js"),
             }
         });
         this.window.setBrowserView(this.view);
@@ -73,7 +73,6 @@ class MainScreen {
                 if (navigatedPath !== path.normalize(searchPagePath)) {
                     finalUrl = navigatedUrl;
                 } else {
-                    // Eğer search.html'e geri dönüldüyse, URL çubuğunu boşalt
                     finalUrl = '';
                 }
             } catch (e) {
@@ -98,17 +97,22 @@ class MainScreen {
         this.window.webContents.send("show-notification", { message, autoHide });
     }
 
+    // İlerleme yüzdesini artık BrowserView'a (search.html) gönderiyoruz
     sendProgress(percent) {
-        this.window.webContents.send("update-progress", percent);
+        // BrowserView yüklendiğinde ilerleme bilgisini gönder
+        this.view.webContents.once('did-finish-load', () => {
+            this.view.webContents.send('update-progress', percent);
+        });
+        // Eğer BrowserView zaten yüklüyse doğrudan gönder
+        if (!this.view.webContents.isLoading()) {
+            this.view.webContents.send('update-progress', percent);
+        }
     }
 
-    // Versiyon bilgisini gönderme metodu, artık main.html'e değil, BrowserView'a (search.html) gönderecek
     sendVersion(version) {
-        // BrowserView (search.html) yüklendiğinde versiyon bilgisini gönder
         this.view.webContents.once('did-finish-load', () => {
             this.view.webContents.send('set-version', version);
         });
-        // Eğer BrowserView zaten yüklüyse doğrudan gönder
         if (!this.view.webContents.isLoading()) {
             this.view.webContents.send('set-version', version);
         }
