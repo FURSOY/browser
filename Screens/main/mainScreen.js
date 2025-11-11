@@ -1,3 +1,5 @@
+// --- START OF FILE mainScreen.js ---
+
 const { app, BrowserWindow, BrowserView, ipcMain } = require("electron");
 const path = require("path");
 const url = require('url');
@@ -113,9 +115,10 @@ class MainScreen {
 
         this.handleMessages();
 
-        // SADECE BrowserView için DevTools aç (Ana pencere için AÇMA)
-        // this.window.webContents.openDevTools({ mode: "undocked" }); // ANA PENCERE - KAPALI
-        this.view.webContents.openDevTools({ mode: "detach" }); // BrowserView için AÇIK
+        // BAŞLANGIÇTA HEM ANA PENCERE HEM BrowserView DevTools KAPALI
+        // Kullanıcı butona basınca açılacak
+        // this.window.webContents.openDevTools({ mode: "detach" }); // ANA PENCERE - KAPALI
+        // this.view.webContents.openDevTools({ mode: "detach" }); // BrowserView - KAPALI
 
         // main.html yüklendiğinde versiyon bilgisini göndermek için
         this.window.webContents.on('did-finish-load', () => {
@@ -191,7 +194,31 @@ class MainScreen {
             const searchPagePath = path.join(__dirname, './search.html');
             this.view.webContents.loadURL(`file://${searchPagePath}`);
         });
+
+        // DevTools toggle - Hem ana pencere hem BrowserView için
+        ipcMain.on('toggle-devtools', () => {
+            console.log("DevTools toggle isteği alındı");
+
+            // Ana pencere DevTools
+            if (this.window.webContents.isDevToolsOpened()) {
+                this.window.webContents.closeDevTools();
+                console.log("Ana pencere DevTools kapatıldı");
+            } else {
+                this.window.webContents.openDevTools({ mode: "detach" });
+                console.log("Ana pencere DevTools açıldı");
+            }
+
+            // BrowserView DevTools
+            if (this.view.webContents.isDevToolsOpened()) {
+                this.view.webContents.closeDevTools();
+                console.log("BrowserView DevTools kapatıldı");
+            } else {
+                this.view.webContents.openDevTools({ mode: "detach" });
+                console.log("BrowserView DevTools açıldı");
+            }
+        });
     }
 }
 
 module.exports = MainScreen;
+// --- END OF FILE mainScreen.js ---

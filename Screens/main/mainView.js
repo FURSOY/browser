@@ -1,3 +1,5 @@
+// --- START OF FILE mainView.js ---
+
 const MAX_NOTIFICATIONS = 3; // Aynı anda gösterilecek maksimum bildirim sayısı
 
 console.log("mainView.js yüklendi");
@@ -105,6 +107,7 @@ const backBtn = document.getElementById('back-btn');
 const forwardBtn = document.getElementById('forward-btn');
 const reloadBtn = document.getElementById('reload-btn');
 const homeBtn = document.getElementById('home-btn');
+const devToolsBtn = document.getElementById('dev-tools-btn');
 
 if (backBtn) {
     backBtn.addEventListener('click', () => {
@@ -130,6 +133,13 @@ if (homeBtn) {
     });
 }
 
+if (devToolsBtn) {
+    devToolsBtn.addEventListener('click', () => {
+        console.log("DevTools butonu tıklandı");
+        window.bridge.toggleDevTools();
+    });
+}
+
 // --- Address Bar Sync Logic ---
 window.bridge.onURLUpdate((event, url) => {
     if (addressBar) {
@@ -148,3 +158,14 @@ window.bridge.onSetVersion((event, version) => {
 });
 
 console.log("mainView.js tamamen yüklendi ve çalışıyor");
+
+// --- Klavye Kısayolu: F12 ile DevTools ---
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'F12') {
+        event.preventDefault();
+        console.log("F12 tuşuna basıldı, DevTools toggle ediliyor");
+        window.bridge.toggleDevTools();
+    }
+});
+
+// --- END OF FILE mainView.js ---
