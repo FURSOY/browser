@@ -1,5 +1,3 @@
-// --- START OF FILE mainScreen.js ---
-
 const { app, BrowserWindow, BrowserView, ipcMain } = require("electron");
 const path = require("path");
 const url = require('url');
@@ -24,17 +22,15 @@ class MainScreen {
             title: "FURSOY Browser",
             icon: path.join(__dirname, "../../assets/icon.ico"),
             show: false,
-            // removeMenu: true, // Menü kaldırılması daha iyi bir kullanıcı deneyimi sunar
             acceptFirstMouse: false,
             autoHideMenuBar: true,
             webPreferences: {
                 contextIsolation: true,
-                // manager.html için preload script
                 preload: path.join(__dirname, "./mainPreload.js"),
             },
         });
 
-        // --- Google Warm-up --- (Performans için iyi bir fikir)
+        // --- Google Warm-up ---
         const warmupView = new BrowserView();
         warmupView.webContents.loadURL('https://www.google.com');
         warmupView.webContents.on('did-finish-load', () => {
@@ -51,20 +47,21 @@ class MainScreen {
                 contextIsolation: true,
                 nodeIntegration: false,
                 webSecurity: true,
+                preload: path.join(__dirname, "./searchPreload.js"), // Search için preload
             }
         });
         this.window.setBrowserView(this.view);
 
-        // Ana pencereye manager.html'i yükle (Kontroller ve Bildirimler için)
-        const managerPagePath = path.join(__dirname, './manager.html');
-        this.window.loadFile(managerPagePath);
+        // Ana pencereye main.html'i yükle (Kontroller ve Bildirimler için)
+        const mainPagePath = path.join(__dirname, './main.html');
+        this.window.loadFile(mainPagePath);
 
         // BrowserView'i kontrol çubuğunun altındaki alanı kaplayacak şekilde ayarla
         this.updateViewBounds();
 
         // BrowserView'e başlangıç sayfasını (search.html) yükle
         const searchPagePath = path.join(__dirname, './search.html');
-        this.view.webContents.loadURL(searchPagePath);
+        this.view.webContents.loadURL(`file://${searchPagePath}`);
 
         this.window.once("ready-to-show", () => {
             this.window.show();
@@ -73,9 +70,9 @@ class MainScreen {
             }
         });
 
-        // manager.html yüklendiğinde callback'i çağır
+        // main.html yüklendiğinde callback'i çağır
         this.window.webContents.once('did-finish-load', () => {
-            console.log('Manager HTML yüklendi ve tüm JavaScript dosyaları çalıştı.');
+            console.log('Main HTML yüklendi ve tüm JavaScript dosyaları çalıştı.');
             if (this._onLoadCallback) {
                 this._onLoadCallback();
             }
@@ -86,7 +83,7 @@ class MainScreen {
             this.updateViewBounds();
         });
 
-        // BrowserView'de navigasyon olduğunda manager'daki adres çubuğunu güncelle
+        // BrowserView'de navigasyon olduğunda main'daki adres çubuğunu güncelle
         this.view.webContents.on('did-navigate', (event, navigatedUrl) => {
             let finalUrl = '';
             try {
@@ -116,11 +113,11 @@ class MainScreen {
 
         this.handleMessages();
 
-        // DevTools'u aç (isteğe bağlı)
-        this.window.webContents.openDevTools({ mode: "undocked" }); // Ana pencere için
-        this.view.webContents.openDevTools({ mode: "right" }); // BrowserView için
+        // SADECE BrowserView için DevTools aç (Ana pencere için AÇMA)
+        // this.window.webContents.openDevTools({ mode: "undocked" }); // ANA PENCERE - KAPALI
+        this.view.webContents.openDevTools({ mode: "detach" }); // BrowserView için AÇIK
 
-        // manager.html yüklendiğinde versiyon bilgisini göndermek için
+        // main.html yüklendiğinde versiyon bilgisini göndermek için
         this.window.webContents.on('did-finish-load', () => {
             this.window.webContents.send('set-version', app.getVersion());
         });
@@ -142,20 +139,21 @@ class MainScreen {
     }
 
     sendNotification(message, autoHide = true) {
-        // Bildirimleri manager.html'in webContents'ine gönder
+        // Bildirimleri main.html'in webContents'ine gönder
+        console.log("Bildirim gönderiliyor:", message);
         this.window.webContents.send("show-notification", { message, autoHide });
     }
 
     sendProgress(percent) {
-        // İlerlemeyi manager.html'in webContents'ine gönder
+        // İlerlemeyi hem main.html hem de BrowserView'e gönder
         this.window.webContents.send('update-progress', percent);
+        this.view.webContents.send('update-progress', percent);
     }
 
     sendVersion(version) {
-        // Versiyonu manager.html'in webContents'ine gönder
-        // Zaten did-finish-load içinde gönderildiği için burada tekrar göndermeye gerek olmayabilir
-        // Ancak tutmak güvenli olabilir
+        // Versiyonu hem main.html hem de BrowserView'e gönder
         this.window.webContents.send('set-version', version);
+        this.view.webContents.send('set-version', version);
     }
 
     close() {
@@ -191,10 +189,9 @@ class MainScreen {
 
         ipcMain.on('nav-home', () => {
             const searchPagePath = path.join(__dirname, './search.html');
-            this.view.webContents.loadURL(searchPagePath);
+            this.view.webContents.loadURL(`file://${searchPagePath}`);
         });
     }
 }
 
 module.exports = MainScreen;
-// --- END OF FILE mainScreen.js ---

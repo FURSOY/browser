@@ -1,5 +1,3 @@
-// --- START OF FILE main.js ---
-
 const { app, BrowserWindow, ipcMain } = require("electron");
 const MainScreen = require("./Screens/main/mainScreen");
 const Globals = require("./globals");
@@ -20,21 +18,26 @@ app.whenReady().then(() => {
     // MainScreen penceresi tamamen yüklendikten sonra otomatik güncelleyiciyi başlat
     // ve ilk bildirimleri gönder.
     curWindow.onMainWindowLoad(() => {
+        console.log("Ana pencere yüklendi, bildirimler gönderiliyor...");
+
         curWindow.sendVersion(app.getVersion());
 
-        // Test bildirimleri buraya taşındı, main window yüklendikten sonra gönderilecek.
+        // Test bildirimleri - daha uzun gecikme ile
         setTimeout(() => {
+            console.log("İlk test bildirimi gönderiliyor...");
             curWindow.sendNotification('Bu ilk test bildiriminiz. 5 saniye sonra kaybolacak.', true);
-            console.log("İlk test bildirimi gönderildi.");
-        }, 8000); // 2 saniye sonra ilk bildirimi gönder
+        }, 2000); // 2 saniye sonra ilk bildirimi gönder
 
         setTimeout(() => {
+            console.log("İkinci test bildirimi gönderiliyor...");
             curWindow.sendNotification('Bu ikinci test bildiriminiz. Kapatana kadar kalıcı olacak.', false);
-            console.log("İkinci test bildirimi gönderildi.");
-        }, 10000); // 4 saniye sonra ikinci bildirimi gönder (ilkten 2 saniye sonra)
+        }, 4000); // 4 saniye sonra ikinci bildirimi gönder
 
-        autoUpdater.checkForUpdates();
-        curWindow.sendNotification(`Güncelleme kontrol ediliyor...`, true); // Kısa süreli göster
+        // Güncelleme kontrolü
+        setTimeout(() => {
+            autoUpdater.checkForUpdates();
+            curWindow.sendNotification(`Güncelleme kontrol ediliyor...`, true);
+        }, 1000); // 1 saniye sonra güncelleme kontrolü
     });
 });
 
@@ -44,7 +47,6 @@ app.on("activate", function () {
 
 /*New Update Available*/
 autoUpdater.on("update-available", (info) => {
-    // Bu bildirimlerin de pencere yüklendikten sonra gitmesi garantilendi.
     curWindow.sendNotification(`Yeni güncelleme bulundu! Versiyon: ${info.version}`, false);
     curWindow.sendNotification(`Yeni versiyon ${info.version} indiriliyor...`, false);
     autoUpdater.downloadUpdate();
@@ -64,7 +66,6 @@ autoUpdater.on("download-progress", (progressObj) => {
     curWindow.sendNotification(`Güncelleme indiriliyor: ${progressObj.percent.toFixed(1)}%`, false);
     curWindow.sendProgress(progressObj.percent);
 });
-
 
 /*Download Completion Message*/
 autoUpdater.on("update-downloaded", (info) => {
@@ -87,4 +88,3 @@ process.on("uncaughtException", function (err) {
 app.on("window-all-closed", function () {
     if (process.platform !== "darwin") app.quit();
 });
-// --- END OF FILE main.js ---

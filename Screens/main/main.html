@@ -9,26 +9,20 @@
     <title>FURSOY Browser Manager</title>
     <link rel="stylesheet" href="styles/main.css"> <!-- main.css dosyasını kullanıyoruz -->
     <style>
-        /* Sadece BrowserView için yer tutucu.
-           BrowserView, Electron main process tarafından bu alanın dışında çizilecek
-           ve kontrol çubuğunun altındaki boşluğu kaplayacak.
-           Burada sadece kontrol çubuğu ve bildirimler olmalı.
-        */
         body {
             display: flex;
             flex-direction: column;
-            /* Kontrol çubuğu üstte, altındaki alan BrowserView için */
         }
     </style>
 </head>
 
 <body>
-    <!-- BROWSER KONTROL ÇUBUĞU -->
     <div id="browser-controls">
         <button id="back-btn">◀</button>
         <button id="forward-btn">▶</button>
         <button id="reload-btn">↻</button>
         <button id="home-btn">🏠</button>
+        <button id="dev-tools-btn">⚙️ DevTools</button>
         <input type="text" id="address-bar" placeholder="Search Google or type a URL">
     </div>
     <div id="notifications-list-container">
