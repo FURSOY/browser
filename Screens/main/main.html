@@ -1,14 +1,29 @@
+<!-- --- START OF FILE manager.html --- -->
+
 <!DOCTYPE html>
 <html lang="tr">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FURSOY Browser</title>
-    <link rel="stylesheet" href="styles/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FURSOY Browser Manager</title>
+    <link rel="stylesheet" href="styles/main.css"> <!-- main.css dosyasını kullanıyoruz -->
+    <style>
+        /* Sadece BrowserView için yer tutucu.
+           BrowserView, Electron main process tarafından bu alanın dışında çizilecek
+           ve kontrol çubuğunun altındaki boşluğu kaplayacak.
+           Burada sadece kontrol çubuğu ve bildirimler olmalı.
+        */
+        body {
+            display: flex;
+            flex-direction: column;
+            /* Kontrol çubuğu üstte, altındaki alan BrowserView için */
+        }
+    </style>
 </head>
 
 <body>
+    <!-- BROWSER KONTROL ÇUBUĞU -->
     <div id="browser-controls">
         <button id="back-btn">◀</button>
         <button id="forward-btn">▶</button>
@@ -16,27 +31,13 @@
         <button id="home-btn">🏠</button>
         <input type="text" id="address-bar" placeholder="Search Google or type a URL">
     </div>
-
-    <!-- The BrowserView will be placed below this control bar by main.js -->
-
-    <!-- Güncelleme bildirimleri bu kapsayıcıda listelenecek -->
     <div id="notifications-list-container">
         <div id="notifications-list">
-            <!-- Bildirimler buraya dinamik olarak eklenecek -->
         </div>
     </div>
-
-    <!-- İndirme ilerlemesi main.html'den kaldırıldı -->
-    <!-- <div id="download-progress-container">
-        <div id="download-progress-bar"></div>
-        <span id="download-progress-text"></span>
-    </div> -->
-
-    <!-- Versiyon bilgisi main.html'den kaldırıldı -->
-    <!-- <div id="version-info">Versiyon: Yükleniyor...</div> -->
-
 
     <script defer src="./mainView.js"></script>
 </body>
 
 </html>
+<!-- --- END OF FILE manager.html --- -->

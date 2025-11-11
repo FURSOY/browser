@@ -1,10 +1,12 @@
-// Bildirimleri yönetmek için yeni bir yapı
+// --- START OF FILE mainView.js ---
+
 const MAX_NOTIFICATIONS = 3; // Aynı anda gösterilecek maksimum bildirim sayısı
 
 function createNotificationElement(message, id) {
     const notificationEl = document.createElement('div');
     notificationEl.id = id;
     notificationEl.classList.add('notification-item');
+    // Kapatma butonu class'ı main.css ile uyumlu olmalı
     notificationEl.innerHTML = `
         <p class="notification-message">${message}</p>
         <button class="notification-close-btn">X</button>
@@ -12,7 +14,14 @@ function createNotificationElement(message, id) {
 
     const closeBtn = notificationEl.querySelector('.notification-close-btn');
     closeBtn.onclick = () => {
-        notificationEl.remove();
+        // Animasyon için fade-out class'ı ekleyip sonra kaldır
+        notificationEl.classList.add('fade-out');
+        setTimeout(() => {
+            if (notificationEl.parentNode) {
+                notificationEl.remove();
+            }
+        }, 300); // Animasyon süresi (0.3s) kadar beklet
+
         // Eğer bu bildirim için bir timeout varsa onu da temizle
         const timeoutId = notificationEl.dataset.timeoutId;
         if (timeoutId) {
@@ -31,7 +40,16 @@ window.bridge.onShowNotification((event, { message, autoHide }) => {
 
     // Maksimum bildirim sayısını aşmamak için en eskiyi kaldır
     while (notificationsList.children.length >= MAX_NOTIFICATIONS) {
-        notificationsList.removeChild(notificationsList.firstElementChild);
+        // En eski bildirim elementini al ve animasyonla kaldır
+        const oldestNotification = notificationsList.firstElementChild;
+        if (oldestNotification) {
+            oldestNotification.classList.add('fade-out');
+            setTimeout(() => {
+                if (oldestNotification.parentNode) {
+                    oldestNotification.remove();
+                }
+            }, 300); // Animasyon süresi kadar beklet
+        }
     }
 
     const notificationId = `notification-${Date.now()}`;
@@ -41,41 +59,17 @@ window.bridge.onShowNotification((event, { message, autoHide }) => {
     // Otomatik gizleme etkinse bir timeout ayarla
     if (autoHide) {
         const timeout = setTimeout(() => {
-            notificationEl.remove();
+            // Otomatik kapanmada da animasyon kullan
+            notificationEl.classList.add('fade-out');
+            setTimeout(() => {
+                if (notificationEl.parentNode) {
+                    notificationEl.remove();
+                }
+            }, 300); // Animasyon süresi kadar beklet
         }, 5000); // 5 saniye sonra kaybolsun
         notificationEl.dataset.timeoutId = timeout; // Timeout ID'yi elemente kaydet
     }
 });
-
-// İndirme ilerlemesi için olan kısım searchView.js'e taşındı.
-// window.bridge.onUpdateProgress((event, percent) => {
-//     const progressContainer = document.getElementById('download-progress-container');
-//     const progressBar = document.getElementById('download-progress-bar');
-//     const progressText = document.getElementById('download-progress-text');
-
-//     if (!progressContainer || !progressBar || !progressText) {
-//         console.error('İlerleme çubuğu için gerekli HTML elementleri bulunamadı.');
-//         return;
-//     }
-
-//     if (percent > 0 && percent < 100) {
-//         progressContainer.classList.add('active');
-//         progressBar.style.width = percent + '%';
-//         progressText.textContent = `${percent.toFixed(1)}% İndiriliyor`;
-//     } else {
-//         progressContainer.classList.remove('active');
-//         progressBar.style.width = '0%';
-//         progressText.textContent = '';
-//     }
-// });
-
-// Versiyon bilgisini göstermek için bu bölüm kaldırıldı, searchView'e taşındı.
-// window.bridge.onSetVersion((event, version) => {
-//     const versionEl = document.getElementById('version-info');
-//     if (versionEl) {
-//         versionEl.textContent = `Versiyon: ${version}`;
-//     }
-// });
 
 
 // --- Address Bar Logic ---
@@ -142,3 +136,21 @@ window.bridge.onURLUpdate((event, url) => {
         addressBar.value = url;
     }
 });
+
+// --- Progress Bar Logic (manager.html içinde yok, bu yüzden bu kısım etkisiz) ---
+// Not: search.html içindeki ilerleme çubuğu için searchView.js kullanılacak.
+// manager.html'e bir ilerleme çubuğu eklemek isterseniz burayı kullanabilirsiniz.
+window.bridge.onUpdateProgress((event, percent) => {
+    // Eğer manager.html'de bir ilerleme çubuğu elementi varsa, burada güncellenir.
+    // Şimdilik manager.html'de böyle bir element olmadığı için bu kısım pasif kalacak.
+    console.log(`Manager received progress: ${percent}%`);
+});
+
+// --- Version Info Logic (manager.html içinde yok, bu yüzden bu kısım etkisiz) ---
+// Not: search.html içindeki versiyon bilgisi için searchView.js kullanılacak.
+window.bridge.onSetVersion((event, version) => {
+    // Eğer manager.html'de bir versiyon bilgisi elementi varsa, burada güncellenir.
+    console.log(`Manager received version: ${version}`);
+});
+
+// --- END OF FILE mainView.js ---

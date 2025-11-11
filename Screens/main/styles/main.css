@@ -1,139 +1,255 @@
-/* Bildirim listesi kapsayıcısı */
-#notifications-list-container {
-    position: fixed;
-    bottom: 10px;
-    /* Altta */
-    right: 10px;
-    /* Sağda */
-    width: 280px;
-    /* Bildirim genişliği */
-    max-height: 80vh;
-    /* Maksimum yükseklik */
-    overflow-y: auto;
-    /* Bildirimler artarsa kaydırma çubuğu */
-    display: flex;
-    flex-direction: column-reverse;
-    /* Yeni bildirimler üste eklensin diye */
-    gap: 10px;
-    /* Bildirimler arası boşluk */
-    z-index: 9999;
-    pointer-events: none;
-    /* Mouse olaylarını geçirme */
-}
-
-#notifications-list-container[hidden] {
-    display: none;
-}
-
-#notifications-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-end;
-    /* Sağda hizala */
-}
-
-.notification-item {
-    background: #333;
-    /* Koyu tema */
-    color: white;
-    padding: 12px 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    /* Kapsayıcıya göre tam genişlik */
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    pointer-events: auto;
-    /* Kapatma butonuna basılabilir olsun */
-    min-height: 40px;
-}
-
-.notification-item .notification-message {
+/* TEMEL HTML VE BODY AYARLARI */
+html,
+body {
     margin: 0;
-    flex-grow: 1;
-    font-size: 14px;
-    line-height: 1.4;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Dışarı taşmaları engelle */
+    position: relative;
+    background-color: #1e1e1e;
+    font-family: -apple-system, BlinkMacMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.notification-item .notification-close-btn {
-    background: none;
-    border: none;
-    color: #bbb;
-    font-size: 16px;
-    cursor: pointer;
-    margin-left: 10px;
-    padding: 0 5px;
-}
-
-.notification-item .notification-close-btn:hover {
-    color: white;
-}
-
-/* main.html'deki indirme ilerlemesi stilleri kaldırıldı */
-/* #download-progress-container { ... } */
-/* #download-progress-container.active { ... } */
-/* #download-progress-bar { ... } */
-/* #download-progress-text { ... } */
-
-/* main.html'deki versiyon bilgisi stilleri kaldırıldı */
-/* #version-info { ... } */
-
-/* Mevcut tarayıcı kontrolleri */
+/* BROWSER KONTROL ÇUBUĞU */
 #browser-controls {
     display: flex;
     align-items: center;
-    padding: 5px;
+    padding: 5px 10px;
     background-color: #282c34;
-    /* Darker background for controls */
     border-bottom: 1px solid #3c4043;
     height: 40px;
-    /* Defined height */
+    /* Sabit yükseklik */
+    box-sizing: border-box;
     -webkit-app-region: drag;
-    /* Make this draggable to move window */
+    position: relative;
+    /* z-index için */
+    z-index: 100;
+    /* BrowserView'in üstünde olmalı */
 }
 
 #browser-controls button {
     -webkit-app-region: no-drag;
-    /* Buttons are not draggable */
     background-color: #3c4043;
     color: white;
     border: none;
-    padding: 5px 10px;
+    padding: 6px 12px;
     margin: 0 2px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
+    transition: background-color 0.2s;
 }
 
 #browser-controls button:hover {
     background-color: #5f6368;
 }
 
+#browser-controls button:active {
+    background-color: #8ab4f8;
+}
+
 #address-bar {
     -webkit-app-region: no-drag;
     flex-grow: 1;
     margin: 0 10px;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border: 1px solid #5f6368;
-    border-radius: 5px;
+    border-radius: 20px;
     background-color: #3c4043;
     color: white;
     font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
 #address-bar:focus {
-    outline: none;
     border-color: #8ab4f8;
 }
 
-body {
-    margin: 0;
+#address-bar::placeholder {
+    color: #9aa0a6;
+}
+
+/* BİLDİRİM CONTAINER - Sağ alt köşe */
+#notifications-list-container {
+    /* manager.html'de bu id #notifications-container olacak, dikkat! */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    max-height: calc(100vh - 80px);
+    /* Viewport yüksekliği - kontrol çubuğu - margin */
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    /* Yeni bildirimler altta görünsün, yukarı doğru sıralansın */
+    gap: 10px;
+    z-index: 10000;
+    /* En üstte olmalı */
+    pointer-events: none;
+    /* Kapsayıcıya tıklanmasın, içindeki öğelere tıklansın */
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+/* Bildirim listesi */
+#notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+    /* Sağda hizala */
+    pointer-events: auto;
+    /* İçindeki öğelere tıklansın */
+}
+
+/* TEK BİLDİRİM ÖĞESİ */
+.notification-item {
+    background: linear-gradient(135deg, #2d3748, #4a5568);
+    color: white;
+    padding: 14px 16px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 300px;
+    pointer-events: auto;
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 4px solid #4299e1;
+    position: relative;
     overflow: hidden;
-    /* Prevent scrollbars from appearing due to fixed elements */
+}
+
+.notification-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #4299e1, #38b2ac);
+}
+
+/* Bildirim animasyonları */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.notification-item.fade-out {
+    animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Bildirim mesajı */
+.notification-item .notification-message {
+    margin: 0;
+    flex-grow: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    padding-right: 10px;
+    word-break: break-word;
+}
+
+/* Kapatma butonu */
+.notification-item .notification-close-btn {
+    /* managerView.js'de bu class notification-close olacak */
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #cbd5e0;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.notification-item .notification-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+
+/* Scrollbar stilleri (Webkit tarayıcılar için) */
+#notifications-list-container::-webkit-scrollbar {
+    /* #notifications-container için de geçerli */
+    width: 6px;
+}
+
+#notifications-list-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+#notifications-list-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+#notifications-list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Farklı bildirim tipleri için stiller */
+.notification-item.success {
+    border-left-color: #48bb78;
+}
+
+.notification-item.success::before {
+    background: linear-gradient(90deg, #48bb78, #38a169);
+}
+
+.notification-item.warning {
+    border-left-color: #ed8936;
+}
+
+.notification-item.warning::before {
+    background: linear-gradient(90deg, #ed8936, #dd6b20);
+}
+
+.notification-item.error {
+    border-left-color: #f56565;
+}
+
+.notification-item.error::before {
+    background: linear-gradient(90deg, #f56565, #e53e3e);
+}
+
+/* Responsive tasarım */
+@media (max-width: 480px) {
+    #notifications-list-container {
+        width: calc(100vw - 40px);
+        right: 20px;
+        left: 20px;
+        max-width: none;
+    }
+
+    .notification-item {
+        max-width: none;
+    }
 }

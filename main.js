@@ -1,7 +1,9 @@
-const { app, BrowserWindow, ipcMain, Notification } = require("electron"); // Notification'ı ekledik
+// --- START OF FILE main.js ---
+
+const { app, BrowserWindow, ipcMain } = require("electron");
 const MainScreen = require("./Screens/main/mainScreen");
 const Globals = require("./globals");
-const { autoUpdater } = require("electron-updater"); // AppUpdater'ı kaldırdık, autoUpdater yeterli
+const { autoUpdater } = require("electron-updater");
 
 let curWindow;
 
@@ -15,11 +17,25 @@ const createWindow = () => {
 app.whenReady().then(() => {
     createWindow();
 
-    // Uygulama hazır olduğunda versiyon bilgisini ana pencereye gönder
-    curWindow.sendVersion(app.getVersion());
+    // MainScreen penceresi tamamen yüklendikten sonra otomatik güncelleyiciyi başlat
+    // ve ilk bildirimleri gönder.
+    curWindow.onMainWindowLoad(() => {
+        curWindow.sendVersion(app.getVersion());
 
-    autoUpdater.checkForUpdates();
-    curWindow.sendNotification(`Güncelleme kontrol ediliyor...`, false); // Versiyon bilgisini buraya dahil etmeyeceğiz, ayrı bir yerde gösterilecek.
+        // Test bildirimleri buraya taşındı, main window yüklendikten sonra gönderilecek.
+        setTimeout(() => {
+            curWindow.sendNotification('Bu ilk test bildiriminiz. 5 saniye sonra kaybolacak.', true);
+            console.log("İlk test bildirimi gönderildi.");
+        }, 8000); // 2 saniye sonra ilk bildirimi gönder
+
+        setTimeout(() => {
+            curWindow.sendNotification('Bu ikinci test bildiriminiz. Kapatana kadar kalıcı olacak.', false);
+            console.log("İkinci test bildirimi gönderildi.");
+        }, 10000); // 4 saniye sonra ikinci bildirimi gönder (ilkten 2 saniye sonra)
+
+        autoUpdater.checkForUpdates();
+        curWindow.sendNotification(`Güncelleme kontrol ediliyor...`, true); // Kısa süreli göster
+    });
 });
 
 app.on("activate", function () {
@@ -28,19 +44,15 @@ app.on("activate", function () {
 
 /*New Update Available*/
 autoUpdater.on("update-available", (info) => {
+    // Bu bildirimlerin de pencere yüklendikten sonra gitmesi garantilendi.
     curWindow.sendNotification(`Yeni güncelleme bulundu! Versiyon: ${info.version}`, false);
-    // İşletim sistemi bildirimi
-    new Notification({
-        title: 'FURSOY Browser Güncellemesi',
-        body: `Yeni versiyon ${info.version} bulundu. İndirme başlatılıyor...`,
-        silent: false
-    }).show();
+    curWindow.sendNotification(`Yeni versiyon ${info.version} indiriliyor...`, false);
     autoUpdater.downloadUpdate();
 });
 
 /*Update Not Available*/
 autoUpdater.on("update-not-available", (info) => {
-    curWindow.sendNotification(`Güncelleme bulunamadı.`, true); // Kısa süreli göster
+    curWindow.sendNotification(`Güncelleme bulunamadı.`, true);
 });
 
 /*Download Progress*/
@@ -49,41 +61,30 @@ autoUpdater.on("download-progress", (progressObj) => {
     log_message += ` - İndirilen: ${progressObj.percent.toFixed(1)}%`;
     log_message += ` (${(progressObj.transferred / 1024 / 1024).toFixed(2)} MB / ${(progressObj.total / 1024 / 1024).toFixed(2)} MB)`;
 
-    curWindow.sendNotification(`Güncelleme indiriliyor: ${progressObj.percent.toFixed(1)}%`, false); // Kalıcı bildirim
-    curWindow.sendProgress(progressObj.percent); // İlerleme çubuğunu güncelle
+    curWindow.sendNotification(`Güncelleme indiriliyor: ${progressObj.percent.toFixed(1)}%`, false);
+    curWindow.sendProgress(progressObj.percent);
 });
 
 
 /*Download Completion Message*/
 autoUpdater.on("update-downloaded", (info) => {
-    curWindow.sendNotification(`Güncelleme indirildi! Uygulama kapandığında yüklenecek.`, false); // Kalıcı bildirim
-    curWindow.sendProgress(100); // İlerleme çubuğunu %100 yap
-    // İşletim sistemi bildirimi
-    new Notification({
-        title: 'FURSOY Browser Güncellemesi',
-        body: 'Güncelleme başarıyla indirildi. Uygulama bir sonraki kapanışta yüklenecektir.',
-        silent: false
-    }).show();
-    // İndirme bittiğinde ilerlemeyi sıfırlamak için 5 saniye sonra gönderebiliriz (isteğe bağlı)
+    curWindow.sendNotification(`Güncelleme indirildi! Uygulama kapandığında yüklenecek.`, false);
+    curWindow.sendProgress(100);
     setTimeout(() => curWindow.sendProgress(0), 5000);
 });
 
 /*Error Handling*/
 autoUpdater.on("error", (err) => {
-    curWindow.sendNotification(`Güncelleme hatası: ${err.message || err}`, false); // Kalıcı bildirim
-    curWindow.sendProgress(0); // İlerleme çubuğunu sıfırla
-    new Notification({
-        title: 'Güncelleme Hatası',
-        body: `Güncelleme sırasında bir hata oluştu: ${err.message || err}`,
-        silent: false
-    }).show();
+    curWindow.sendNotification(`Güncelleme hatası: ${err.message || err}`, false);
+    curWindow.sendProgress(0);
 });
 
 //Global exception handler
 process.on("uncaughtException", function (err) {
-    console.error("uncaughtExceptionHatası:", err); // console.log yerine console.error kullanmak daha iyi
+    console.error("uncaughtExceptionHatası:", err);
 });
 
 app.on("window-all-closed", function () {
-    if (process.platform !== "darwin") app.quit(); // === yerine !==
+    if (process.platform !== "darwin") app.quit();
 });
+// --- END OF FILE main.js ---
