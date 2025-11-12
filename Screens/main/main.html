@@ -12,29 +12,22 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            /* Pencerenin tüm yüksekliğini kapla */
             margin: 0;
             padding: 0;
             overflow: hidden;
-            /* Scroll olmasın */
         }
 
         /* Browser kontrolleri sabit yükseklikte kalsın */
         #browser-controls {
             flex-shrink: 0;
-            /* İçerik büyüdüğünde küçülmesini engelle */
         }
 
         /* Webview'in yerleştirileceği alan */
         #webview-container-placeholder {
             flex-grow: 1;
-            /* Kalan tüm dikey alanı kapla */
             position: relative;
-            /* BrowserView konumlandırması için referans */
             overflow: hidden;
-            /* İçerik taşmasını engelle */
             background-color: #2e343e;
-            /* Yüklenirken veya boşken bir arka plan */
         }
     </style>
 </head>
@@ -52,12 +45,6 @@
     <!-- BrowserView'in yerleştirileceği boş yer tutucu -->
     <div id="webview-container-placeholder">
         <!-- Electron's BrowserView will occupy this space -->
-    </div>
-
-    <!-- Bildirimler (Sağ altta sabit kalacak) -->
-    <div id="notifications-list-container">
-        <div id="notifications-list">
-        </div>
     </div>
 
     <script defer src="./mainView.js"></script>

@@ -1,11 +1,8 @@
 // --- START OF FILE mainScreen.js ---
 
-const { app, BrowserWindow, BrowserView, ipcMain } = require("electron");
+const { app, BrowserWindow, BrowserView, ipcMain, Notification } = require("electron");
 const path = require("path");
 const url = require('url');
-
-// Artık bu sabiti kullanmıyoruz, çünkü alanı HTML'deki yer tutucudan alacağız.
-// const CONTROLS_HEIGHT = 40; // Tarayıcı kontrol çubuğunun yüksekliği
 
 class MainScreen {
     window;
@@ -34,7 +31,6 @@ class MainScreen {
         });
 
         // --- Google Warm-up ---
-        // Warm-up view'in main window'dan önce oluşturulması gerekiyor
         const warmupView = new BrowserView();
         warmupView.webContents.loadURL('https://www.google.com');
         warmupView.webContents.on('did-finish-load', () => {
@@ -45,14 +41,13 @@ class MainScreen {
             }
         });
 
-        // Ana pencereye main.html'i yükle (Kontroller ve Bildirimler için)
+        // Ana pencereye main.html'i yükle
         const mainPagePath = path.join(__dirname, './main.html');
         this.window.loadFile(mainPagePath);
 
         // main.html yüklendiğinde callback'i çağır
         this.window.webContents.once('did-finish-load', () => {
             console.log('Main HTML yüklendi ve tüm JavaScript dosyaları çalıştı.');
-            // BrowserView'i ana HTML yüklendikten sonra oluştur ve konumlandır
             this.setupBrowserView();
 
             if (this._onLoadCallback) {
@@ -69,17 +64,12 @@ class MainScreen {
 
         // Pencere boyutu değiştiğinde BrowserView'i güncelle
         this.window.on('resize', () => {
-            // Eğer view henüz oluşturulmadıysa hata vermemek için kontrol
             if (this.view) {
                 this.updateViewBounds();
             }
         });
 
         this.handleMessages();
-
-        // SADECE ANA PENCERE (main.html) için DevTools aç
-        this.window.webContents.openDevTools({ mode: "detach" });
-        console.log("Ana pencere (main.html) DevTools açıldı");
 
         // main.html yüklendiğinde versiyon bilgisini göndermek için
         this.window.webContents.on('did-finish-load', () => {
@@ -88,13 +78,13 @@ class MainScreen {
     }
 
     setupBrowserView() {
-        // BrowserView oluştur (Tarayıcının asıl içeriği için)
+        // BrowserView oluştur
         this.view = new BrowserView({
             webPreferences: {
                 contextIsolation: true,
                 nodeIntegration: false,
                 webSecurity: true,
-                preload: path.join(__dirname, "./searchPreload.js"), // Search için preload
+                preload: path.join(__dirname, "./searchPreload.js"),
             }
         });
         this.window.setBrowserView(this.view);
@@ -111,13 +101,12 @@ class MainScreen {
             let finalUrl = '';
             try {
                 const searchFilePath = path.normalize(searchPagePath);
-                // Eğer BrowserView search.html'e geri döndüyse adres çubuğunu boş bırak
                 if (navigatedUrl.startsWith('file://')) {
                     const navigatedPath = path.normalize(url.fileURLToPath(navigatedUrl));
                     if (navigatedPath !== searchFilePath) {
                         finalUrl = navigatedUrl;
                     } else {
-                        finalUrl = ''; // search.html ise boş bırak
+                        finalUrl = '';
                     }
                 } else {
                     finalUrl = navigatedUrl;
@@ -130,18 +119,15 @@ class MainScreen {
         });
 
         this.view.webContents.on('did-navigate-in-page', (event, navigatedUrl) => {
-            // did-navigate-in-page olayında da adres çubuğunu güncelle
             this.window.webContents.send('update-address-bar', navigatedUrl);
         });
     }
 
-    // BrowserView boyutlarını güncelle (HTML içindeki yer tutucuya göre)
     async updateViewBounds() {
         if (!this.view || !this.window || !this.window.webContents) {
             return;
         }
 
-        // main.html içindeki #webview-container-placeholder elementinin boyutlarını ve konumunu al
         const bounds = await this.window.webContents.executeJavaScript(`
             (function() {
                 const placeholder = document.getElementById('webview-container-placeholder');
@@ -159,7 +145,6 @@ class MainScreen {
         `);
 
         if (bounds) {
-            // Tarayıcı görünümünü bu boyutlara ayarla
             this.view.setBounds({
                 x: Math.floor(bounds.x),
                 y: Math.floor(bounds.y),
@@ -168,12 +153,11 @@ class MainScreen {
             });
             console.log("BrowserView bounds updated:", bounds);
         } else {
-            console.warn("webview-container-placeholder bulunamadı veya boyutları alınamadı.");
-            // Bir fallback olarak varsayılan bir boyut belirleyebiliriz
+            console.warn("webview-container-placeholder bulunamadı.");
             const contentBounds = this.window.getContentBounds();
             this.view.setBounds({
                 x: 0,
-                y: 40, // Varsayılan kontrol çubuğu yüksekliği
+                y: 40,
                 width: contentBounds.width,
                 height: contentBounds.height - 40
             });
@@ -184,22 +168,46 @@ class MainScreen {
         this._onLoadCallback = callback;
     }
 
+    // Windows Native Notification kullan
     sendNotification(message, autoHide = true) {
-        // Bildirimleri main.html'in webContents'ine gönder
-        console.log("Bildirim gönderiliyor:", message);
-        this.window.webContents.send("show-notification", { message, autoHide });
+        console.log("Windows bildirimi gönderiliyor:", message);
+
+        // Notification izni kontrolü
+        if (Notification.isSupported()) {
+            const notification = new Notification({
+                title: 'FURSOY Browser',
+                body: message,
+                icon: path.join(__dirname, "../../assets/icon.ico"),
+                silent: false,
+                timeoutType: autoHide ? 'default' : 'never'
+            });
+
+            notification.show();
+
+            notification.on('click', () => {
+                // Bildirime tıklandığında pencereyi ön plana getir
+                if (this.window) {
+                    if (this.window.isMinimized()) this.window.restore();
+                    this.window.focus();
+                }
+            });
+        } else {
+            console.warn("Bildirimler desteklenmiyor.");
+        }
     }
 
     sendProgress(percent) {
-        // İlerlemeyi hem main.html hem de BrowserView'e gönder
         this.window.webContents.send('update-progress', percent);
-        this.view.webContents.send('update-progress', percent);
+        if (this.view && this.view.webContents) {
+            this.view.webContents.send('update-progress', percent);
+        }
     }
 
     sendVersion(version) {
-        // Versiyonu hem main.html hem de BrowserView'e gönder
         this.window.webContents.send('set-version', version);
-        this.view.webContents.send('set-version', version);
+        if (this.view && this.view.webContents) {
+            this.view.webContents.send('set-version', version);
+        }
     }
 
     close() {
@@ -212,30 +220,35 @@ class MainScreen {
     }
 
     handleMessages() {
-        // Navigasyon mesajlarını BrowserView üzerinde işle
         ipcMain.on('navigate-to', (event, url) => {
-            this.view.webContents.loadURL(url);
+            if (this.view && this.view.webContents) {
+                this.view.webContents.loadURL(url);
+            }
         });
 
         ipcMain.on('nav-back', () => {
-            if (this.view.webContents.canGoBack()) {
+            if (this.view && this.view.webContents && this.view.webContents.canGoBack()) {
                 this.view.webContents.goBack();
             }
         });
 
         ipcMain.on('nav-forward', () => {
-            if (this.view.webContents.canGoForward()) {
+            if (this.view && this.view.webContents && this.view.webContents.canGoForward()) {
                 this.view.webContents.goForward();
             }
         });
 
         ipcMain.on('nav-reload', () => {
-            this.view.webContents.reload();
+            if (this.view && this.view.webContents) {
+                this.view.webContents.reload();
+            }
         });
 
         ipcMain.on('nav-home', () => {
             const searchPagePath = path.join(__dirname, './search.html');
-            this.view.webContents.loadURL(`file://${searchPagePath}`);
+            if (this.view && this.view.webContents) {
+                this.view.webContents.loadURL(`file://${searchPagePath}`);
+            }
         });
 
         ipcMain.on('toggleDevTools', () => {

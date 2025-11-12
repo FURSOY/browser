@@ -21,23 +21,6 @@ app.whenReady().then(() => {
         console.log("Ana pencere yüklendi, bildirimler gönderiliyor...");
 
         curWindow.sendVersion(app.getVersion());
-
-        // Test bildirimleri - daha uzun gecikme ile
-        setTimeout(() => {
-            console.log("İlk test bildirimi gönderiliyor...");
-            curWindow.sendNotification('Bu ilk test bildiriminiz. 5 saniye sonra kaybolacak.', true);
-        }, 2000); // 2 saniye sonra ilk bildirimi gönder
-
-        setTimeout(() => {
-            console.log("İkinci test bildirimi gönderiliyor...");
-            curWindow.sendNotification('Bu ikinci test bildiriminiz. Kapatana kadar kalıcı olacak.', false);
-        }, 4000); // 4 saniye sonra ikinci bildirimi gönder
-
-        // Güncelleme kontrolü
-        setTimeout(() => {
-            autoUpdater.checkForUpdates();
-            curWindow.sendNotification(`Güncelleme kontrol ediliyor...`, true);
-        }, 1000); // 1 saniye sonra güncelleme kontrolü
     });
 });
 
@@ -45,17 +28,15 @@ app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-/*New Update Available*/
 autoUpdater.on("update-available", (info) => {
-    curWindow.sendNotification(`Yeni güncelleme bulundu! Versiyon: ${info.version}`, false);
+    curWindow.sendNotification(`Yeni güncelleme bulundu!`, false);
     curWindow.sendNotification(`Yeni versiyon ${info.version} indiriliyor...`, false);
     autoUpdater.downloadUpdate();
 });
 
-/*Update Not Available*/
-autoUpdater.on("update-not-available", (info) => {
-    curWindow.sendNotification(`Güncelleme bulunamadı.`, true);
-});
+// autoUpdater.on("update-not-available", (info) => {
+//     curWindow.sendNotification(`Güncelleme bulunamadı.`, true);
+// });
 
 /*Download Progress*/
 autoUpdater.on("download-progress", (progressObj) => {

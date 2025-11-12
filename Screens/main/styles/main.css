@@ -6,10 +6,9 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    /* Dışarı taşmaları engelle */
     position: relative;
     background-color: #1e1e1e;
-    font-family: -apple-system, BlinkMacMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* BROWSER KONTROL ÇUBUĞU */
@@ -20,13 +19,10 @@ body {
     background-color: #282c34;
     border-bottom: 1px solid #3c4043;
     height: 40px;
-    /* Sabit yükseklik */
     box-sizing: border-box;
     -webkit-app-region: drag;
     position: relative;
-    /* z-index için */
     z-index: 100;
-    /* BrowserView'in üstünde olmalı */
 }
 
 #browser-controls button {
@@ -70,186 +66,4 @@ body {
 
 #address-bar::placeholder {
     color: #9aa0a6;
-}
-
-/* BİLDİRİM CONTAINER - Sağ alt köşe */
-#notifications-list-container {
-    /* manager.html'de bu id #notifications-container olacak, dikkat! */
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 320px;
-    max-height: calc(100vh - 80px);
-    /* Viewport yüksekliği - kontrol çubuğu - margin */
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column-reverse;
-    /* Yeni bildirimler altta görünsün, yukarı doğru sıralansın */
-    gap: 10px;
-    z-index: 10000;
-    /* En üstte olmalı */
-    pointer-events: none;
-    /* Kapsayıcıya tıklanmasın, içindeki öğelere tıklansın */
-    padding: 5px;
-    box-sizing: border-box;
-}
-
-/* Bildirim listesi */
-#notifications-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-end;
-    /* Sağda hizala */
-    pointer-events: auto;
-    /* İçindeki öğelere tıklansın */
-}
-
-/* TEK BİLDİRİM ÖĞESİ */
-.notification-item {
-    background: linear-gradient(135deg, #2d3748, #4a5568);
-    color: white;
-    padding: 14px 16px;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 300px;
-    pointer-events: auto;
-    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-left: 4px solid #4299e1;
-    position: relative;
-    overflow: hidden;
-}
-
-.notification-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #4299e1, #38b2ac);
-}
-
-/* Bildirim animasyonları */
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideOutRight {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-}
-
-.notification-item.fade-out {
-    animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* Bildirim mesajı */
-.notification-item .notification-message {
-    margin: 0;
-    flex-grow: 1;
-    font-size: 14px;
-    line-height: 1.4;
-    padding-right: 10px;
-    word-break: break-word;
-}
-
-/* Kapatma butonu */
-.notification-item .notification-close-btn {
-    /* managerView.js'de bu class notification-close olacak */
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #cbd5e0;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 2px 8px;
-    border-radius: 4px;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-
-.notification-item .notification-close-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-
-/* Scrollbar stilleri (Webkit tarayıcılar için) */
-#notifications-list-container::-webkit-scrollbar {
-    /* #notifications-container için de geçerli */
-    width: 6px;
-}
-
-#notifications-list-container::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-#notifications-list-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
-}
-
-#notifications-list-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-}
-
-/* Farklı bildirim tipleri için stiller */
-.notification-item.success {
-    border-left-color: #48bb78;
-}
-
-.notification-item.success::before {
-    background: linear-gradient(90deg, #48bb78, #38a169);
-}
-
-.notification-item.warning {
-    border-left-color: #ed8936;
-}
-
-.notification-item.warning::before {
-    background: linear-gradient(90deg, #ed8936, #dd6b20);
-}
-
-.notification-item.error {
-    border-left-color: #f56565;
-}
-
-.notification-item.error::before {
-    background: linear-gradient(90deg, #f56565, #e53e3e);
-}
-
-/* Responsive tasarım */
-@media (max-width: 480px) {
-    #notifications-list-container {
-        width: calc(100vw - 40px);
-        right: 20px;
-        left: 20px;
-        max-width: none;
-    }
-
-    .notification-item {
-        max-width: none;
-    }
 }
