@@ -1,5 +1,3 @@
-<!-- --- START OF FILE manager.html --- -->
-
 <!DOCTYPE html>
 <html lang="tr">
 
@@ -7,24 +5,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FURSOY Browser Manager</title>
-    <link rel="stylesheet" href="styles/main.css"> <!-- main.css dosyasını kullanıyoruz -->
+    <link rel="stylesheet" href="styles/main.css">
     <style>
+        /* Body tüm viewport'u kaplasın ve dikey flex düzeni olsun */
         body {
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            /* Pencerenin tüm yüksekliğini kapla */
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            /* Scroll olmasın */
+        }
+
+        /* Browser kontrolleri sabit yükseklikte kalsın */
+        #browser-controls {
+            flex-shrink: 0;
+            /* İçerik büyüdüğünde küçülmesini engelle */
+        }
+
+        /* Webview'in yerleştirileceği alan */
+        #webview-container-placeholder {
+            flex-grow: 1;
+            /* Kalan tüm dikey alanı kapla */
+            position: relative;
+            /* BrowserView konumlandırması için referans */
+            overflow: hidden;
+            /* İçerik taşmasını engelle */
+            background-color: #2e343e;
+            /* Yüklenirken veya boşken bir arka plan */
         }
     </style>
 </head>
 
 <body>
+    <!-- Tarayıcı Kontrol Çubuğu -->
     <div id="browser-controls">
         <button id="back-btn">◀</button>
         <button id="forward-btn">▶</button>
         <button id="reload-btn">↻</button>
         <button id="home-btn">🏠</button>
-        <button id="dev-tools-btn">⚙️ DevTools</button>
         <input type="text" id="address-bar" placeholder="Search Google or type a URL">
     </div>
+
+    <!-- BrowserView'in yerleştirileceği boş yer tutucu -->
+    <div id="webview-container-placeholder">
+        <!-- Electron's BrowserView will occupy this space -->
+    </div>
+
+    <!-- Bildirimler (Sağ altta sabit kalacak) -->
     <div id="notifications-list-container">
         <div id="notifications-list">
         </div>
@@ -34,4 +64,3 @@
 </body>
 
 </html>
-<!-- --- END OF FILE manager.html --- -->

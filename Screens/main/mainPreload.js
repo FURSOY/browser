@@ -15,6 +15,9 @@ let bridge = {
 
     // URL güncellemesi
     onURLUpdate: (callback) => ipcRenderer.on('update-address-bar', callback),
+
+    // DevTools
+    toggleDevTools: () => ipcRenderer.send('toggleDevTools'), // Yeni eklendi
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

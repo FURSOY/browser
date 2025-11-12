@@ -107,7 +107,6 @@ const backBtn = document.getElementById('back-btn');
 const forwardBtn = document.getElementById('forward-btn');
 const reloadBtn = document.getElementById('reload-btn');
 const homeBtn = document.getElementById('home-btn');
-const devToolsBtn = document.getElementById('dev-tools-btn');
 
 if (backBtn) {
     backBtn.addEventListener('click', () => {
@@ -130,13 +129,6 @@ if (reloadBtn) {
 if (homeBtn) {
     homeBtn.addEventListener('click', () => {
         window.bridge.navHome();
-    });
-}
-
-if (devToolsBtn) {
-    devToolsBtn.addEventListener('click', () => {
-        console.log("DevTools butonu tıklandı");
-        window.bridge.toggleDevTools();
     });
 }
 

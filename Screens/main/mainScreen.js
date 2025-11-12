@@ -4,7 +4,8 @@ const { app, BrowserWindow, BrowserView, ipcMain } = require("electron");
 const path = require("path");
 const url = require('url');
 
-const CONTROLS_HEIGHT = 40; // Tarayıcı kontrol çubuğunun yüksekliği
+// Artık bu sabiti kullanmıyoruz, çünkü alanı HTML'deki yer tutucudan alacağız.
+// const CONTROLS_HEIGHT = 40; // Tarayıcı kontrol çubuğunun yüksekliği
 
 class MainScreen {
     window;
@@ -33,6 +34,7 @@ class MainScreen {
         });
 
         // --- Google Warm-up ---
+        // Warm-up view'in main window'dan önce oluşturulması gerekiyor
         const warmupView = new BrowserView();
         warmupView.webContents.loadURL('https://www.google.com');
         warmupView.webContents.on('did-finish-load', () => {
@@ -43,6 +45,49 @@ class MainScreen {
             }
         });
 
+        // Ana pencereye main.html'i yükle (Kontroller ve Bildirimler için)
+        const mainPagePath = path.join(__dirname, './main.html');
+        this.window.loadFile(mainPagePath);
+
+        // main.html yüklendiğinde callback'i çağır
+        this.window.webContents.once('did-finish-load', () => {
+            console.log('Main HTML yüklendi ve tüm JavaScript dosyaları çalıştı.');
+            // BrowserView'i ana HTML yüklendikten sonra oluştur ve konumlandır
+            this.setupBrowserView();
+
+            if (this._onLoadCallback) {
+                this._onLoadCallback();
+            }
+        });
+
+        this.window.once("ready-to-show", () => {
+            this.window.show();
+            if (this.position.maximized) {
+                this.window.maximize();
+            }
+        });
+
+        // Pencere boyutu değiştiğinde BrowserView'i güncelle
+        this.window.on('resize', () => {
+            // Eğer view henüz oluşturulmadıysa hata vermemek için kontrol
+            if (this.view) {
+                this.updateViewBounds();
+            }
+        });
+
+        this.handleMessages();
+
+        // SADECE ANA PENCERE (main.html) için DevTools aç
+        this.window.webContents.openDevTools({ mode: "detach" });
+        console.log("Ana pencere (main.html) DevTools açıldı");
+
+        // main.html yüklendiğinde versiyon bilgisini göndermek için
+        this.window.webContents.on('did-finish-load', () => {
+            this.window.webContents.send('set-version', app.getVersion());
+        });
+    }
+
+    setupBrowserView() {
         // BrowserView oluştur (Tarayıcının asıl içeriği için)
         this.view = new BrowserView({
             webPreferences: {
@@ -54,36 +99,12 @@ class MainScreen {
         });
         this.window.setBrowserView(this.view);
 
-        // Ana pencereye main.html'i yükle (Kontroller ve Bildirimler için)
-        const mainPagePath = path.join(__dirname, './main.html');
-        this.window.loadFile(mainPagePath);
-
         // BrowserView'i kontrol çubuğunun altındaki alanı kaplayacak şekilde ayarla
         this.updateViewBounds();
 
         // BrowserView'e başlangıç sayfasını (search.html) yükle
         const searchPagePath = path.join(__dirname, './search.html');
         this.view.webContents.loadURL(`file://${searchPagePath}`);
-
-        this.window.once("ready-to-show", () => {
-            this.window.show();
-            if (this.position.maximized) {
-                this.window.maximize();
-            }
-        });
-
-        // main.html yüklendiğinde callback'i çağır
-        this.window.webContents.once('did-finish-load', () => {
-            console.log('Main HTML yüklendi ve tüm JavaScript dosyaları çalıştı.');
-            if (this._onLoadCallback) {
-                this._onLoadCallback();
-            }
-        });
-
-        // Pencere boyutu değiştiğinde BrowserView'i güncelle
-        this.window.on('resize', () => {
-            this.updateViewBounds();
-        });
 
         // BrowserView'de navigasyon olduğunda main'daki adres çubuğunu güncelle
         this.view.webContents.on('did-navigate', (event, navigatedUrl) => {
@@ -112,29 +133,51 @@ class MainScreen {
             // did-navigate-in-page olayında da adres çubuğunu güncelle
             this.window.webContents.send('update-address-bar', navigatedUrl);
         });
-
-        this.handleMessages();
-
-        // BAŞLANGIÇTA HEM ANA PENCERE HEM BrowserView DevTools KAPALI
-        // Kullanıcı butona basınca açılacak
-        // this.window.webContents.openDevTools({ mode: "detach" }); // ANA PENCERE - KAPALI
-        // this.view.webContents.openDevTools({ mode: "detach" }); // BrowserView - KAPALI
-
-        // main.html yüklendiğinde versiyon bilgisini göndermek için
-        this.window.webContents.on('did-finish-load', () => {
-            this.window.webContents.send('set-version', app.getVersion());
-        });
     }
 
-    // BrowserView boyutlarını güncelle (Kontrol çubuğunun altından başla)
-    updateViewBounds() {
-        const contentBounds = this.window.getContentBounds();
-        this.view.setBounds({
-            x: 0,
-            y: CONTROLS_HEIGHT, // Kontrol çubuğunun altından başla
-            width: contentBounds.width,
-            height: contentBounds.height - CONTROLS_HEIGHT // Kontrol çubuğu kadar yüksekliği azalt
-        });
+    // BrowserView boyutlarını güncelle (HTML içindeki yer tutucuya göre)
+    async updateViewBounds() {
+        if (!this.view || !this.window || !this.window.webContents) {
+            return;
+        }
+
+        // main.html içindeki #webview-container-placeholder elementinin boyutlarını ve konumunu al
+        const bounds = await this.window.webContents.executeJavaScript(`
+            (function() {
+                const placeholder = document.getElementById('webview-container-placeholder');
+                if (placeholder) {
+                    const rect = placeholder.getBoundingClientRect();
+                    return {
+                        x: rect.left,
+                        y: rect.top,
+                        width: rect.width,
+                        height: rect.height
+                    };
+                }
+                return null;
+            })();
+        `);
+
+        if (bounds) {
+            // Tarayıcı görünümünü bu boyutlara ayarla
+            this.view.setBounds({
+                x: Math.floor(bounds.x),
+                y: Math.floor(bounds.y),
+                width: Math.floor(bounds.width),
+                height: Math.floor(bounds.height)
+            });
+            console.log("BrowserView bounds updated:", bounds);
+        } else {
+            console.warn("webview-container-placeholder bulunamadı veya boyutları alınamadı.");
+            // Bir fallback olarak varsayılan bir boyut belirleyebiliriz
+            const contentBounds = this.window.getContentBounds();
+            this.view.setBounds({
+                x: 0,
+                y: 40, // Varsayılan kontrol çubuğu yüksekliği
+                width: contentBounds.width,
+                height: contentBounds.height - 40
+            });
+        }
     }
 
     onMainWindowLoad(callback) {
@@ -195,26 +238,13 @@ class MainScreen {
             this.view.webContents.loadURL(`file://${searchPagePath}`);
         });
 
-        // DevTools toggle - Hem ana pencere hem BrowserView için
-        ipcMain.on('toggle-devtools', () => {
-            console.log("DevTools toggle isteği alındı");
-
-            // Ana pencere DevTools
-            if (this.window.webContents.isDevToolsOpened()) {
-                this.window.webContents.closeDevTools();
-                console.log("Ana pencere DevTools kapatıldı");
-            } else {
-                this.window.webContents.openDevTools({ mode: "detach" });
-                console.log("Ana pencere DevTools açıldı");
-            }
-
-            // BrowserView DevTools
-            if (this.view.webContents.isDevToolsOpened()) {
-                this.view.webContents.closeDevTools();
-                console.log("BrowserView DevTools kapatıldı");
-            } else {
-                this.view.webContents.openDevTools({ mode: "detach" });
-                console.log("BrowserView DevTools açıldı");
+        ipcMain.on('toggleDevTools', () => {
+            if (this.view && this.view.webContents) {
+                if (this.view.webContents.isDevToolsOpened()) {
+                    this.view.webContents.closeDevTools();
+                } else {
+                    this.view.webContents.openDevTools({ mode: "detach" });
+                }
             }
         });
     }
