@@ -38,7 +38,6 @@ app.on("window-all-closed", function () {
 
 autoUpdater.on("update-available", (info) => {
     curWindow.sendNotification(`Yeni güncelleme bulundu! Versiyon: ${info.version}`, false);
-    curWindow.sendNotification(`Güncelleme indiriliyor...`, false);
     autoUpdater.downloadUpdate();
 });
 

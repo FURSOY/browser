@@ -40,17 +40,15 @@ class MainScreen {
         warmupView.setBounds({ x: -width, y: -height, width, height });
         warmupView.webContents.loadURL('https://www.google.com').then(() => {
             console.log("Google warmup successful.");
-            // Yükleme bittikten sonra view'ı kaldır ve yok et
+            // Yükleme bittikten sonra view'ı kaldır
             if (this.window && !this.window.isDestroyed() && warmupView && !warmupView.webContents.isDestroyed()) {
                 this.window.removeBrowserView(warmupView);
-                warmupView.destroy(); // BrowserView'ı doğru şekilde yok et
             }
         }).catch(err => {
             console.error("Google warmup failed:", err);
             // Hata durumunda da view'ı temizle
             if (this.window && !this.window.isDestroyed() && warmupView && !warmupView.webContents.isDestroyed()) {
                 this.window.removeBrowserView(warmupView);
-                warmupView.destroy(); // BrowserView'ı doğru şekilde yok et
             }
         });
 
@@ -106,9 +104,20 @@ class MainScreen {
         this.view.webContents.loadURL(`file://${searchPagePath}`);
 
         // BrowserView yüklendiğinde versiyon bilgisini gönder
-        this.view.webContents.once('did-finish-load', () => {
-            console.log('BrowserView (search.html) yüklendi, versiyon gönderiliyor.');
-            this.sendVersion(app.getVersion()); // BrowserView yüklendiğinde versiyonu gönder
+        this.view.webContents.on('did-finish-load', () => {
+            const currentURL = this.view.webContents.getURL();
+            const searchPagePath = path.join(__dirname, './search.html');
+            const searchPageURL = url.format({
+                pathname: searchPagePath,
+                protocol: 'file:',
+                slashes: true
+            });
+
+            // Sadece search.html yüklendiğinde versiyonu gönder
+            if (currentURL === searchPageURL) {
+                console.log('BrowserView (search.html) yüklendi, versiyon gönderiliyor.');
+                this.sendVersion(app.getVersion());
+            }
         });
 
 
@@ -291,6 +300,12 @@ class MainScreen {
                     this.view.webContents.openDevTools({ mode: "detach" });
                 }
             }
+        });
+
+        // Uygulamayı yeniden başlat
+        ipcMain.on('restart-app', () => {
+            app.relaunch();
+            app.exit();
         });
     }
 }
