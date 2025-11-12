@@ -31,15 +31,36 @@ class MainScreen {
         });
 
         // --- Google Warm-up ---
+        // Uygulama açılışında BrowserView'lerin daha hızlı yüklenmesi için Google'ı önceden yükle
+        // Bu, kullanıcı ilk kez bir sayfayı ziyaret ettiğinde yaşanan gecikmeyi azaltır.
         const warmupView = new BrowserView();
-        warmupView.webContents.loadURL('https://www.google.com');
-        warmupView.webContents.on('did-finish-load', () => {
+        this.window.setBrowserView(warmupView); // Geçici olarak view'ı ayarla
+        const { width, height } = this.window.getBounds();
+        // Gizli bir alanda yükle
+        warmupView.setBounds({ x: -width, y: -height, width, height });
+        warmupView.webContents.loadURL('https://www.google.com').then(() => {
+            console.log("Google warmup successful.");
+            // Yükleme bittikten sonra view'ı kaldır ve yok et
+            if (this.window && !this.window.isDestroyed()) {
+                this.window.removeBrowserView(warmupView);
+            }
             try {
                 warmupView.destroy();
             } catch (e) {
                 // Ignore if already destroyed
+                console.warn("Warmup view already destroyed or unable to destroy:", e);
             }
+        }).catch(err => {
+            console.error("Google warmup failed:", err);
+            // Hata durumunda da view'ı temizle
+            if (this.window && !this.window.isDestroyed()) {
+                this.window.removeBrowserView(warmupView);
+            }
+            try {
+                warmupView.destroy();
+            } catch (e) { /* ignore */ }
         });
+
 
         // Ana pencereye main.html'i yükle
         const mainPagePath = path.join(__dirname, './main.html');
@@ -106,7 +127,7 @@ class MainScreen {
                     if (navigatedPath !== searchFilePath) {
                         finalUrl = navigatedUrl;
                     } else {
-                        finalUrl = '';
+                        finalUrl = ''; // Eğer search.html ise adres çubuğunu boş bırak
                     }
                 } else {
                     finalUrl = navigatedUrl;
@@ -154,10 +175,11 @@ class MainScreen {
             console.log("BrowserView bounds updated:", bounds);
         } else {
             console.warn("webview-container-placeholder bulunamadı.");
+            // Eğer placeholder bulunamazsa, varsayılan bir değer kullan
             const contentBounds = this.window.getContentBounds();
             this.view.setBounds({
                 x: 0,
-                y: 40,
+                y: 40, // Kontrol çubuğu yüksekliği varsayımı
                 width: contentBounds.width,
                 height: contentBounds.height - 40
             });
@@ -197,7 +219,8 @@ class MainScreen {
     }
 
     sendProgress(percent) {
-        this.window.webContents.send('update-progress', percent);
+        // main.html'e de ilerleme bilgisini gönderilebilir, ancak şu anlık sadece BrowserView'e gidiyor.
+        // this.window.webContents.send('update-progress', percent);
         if (this.view && this.view.webContents) {
             this.view.webContents.send('update-progress', percent);
         }
@@ -207,6 +230,13 @@ class MainScreen {
         this.window.webContents.send('set-version', version);
         if (this.view && this.view.webContents) {
             this.view.webContents.send('set-version', version);
+        }
+    }
+
+    // Güncelleme hazır olduğunda search.html'e bildirim gönderen metod
+    sendUpdateReady() {
+        if (this.view && this.view.webContents) {
+            this.view.webContents.send('update-ready-to-install');
         }
     }
 
@@ -264,4 +294,3 @@ class MainScreen {
 }
 
 module.exports = MainScreen;
-// --- END OF FILE mainScreen.js ---

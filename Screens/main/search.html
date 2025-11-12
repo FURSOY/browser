@@ -55,18 +55,14 @@
             z-index: 1000;
         }
 
-        /* İndirme İlerlemesi - search.html içinde sağ altta */
-        #download-progress-container {
+        /* İndirme İlerlemesi / Yeniden Başlatma Butonu - search.html içinde sağ altta */
+        #download-status-area {
             position: absolute;
-            /* fixed yerine absolute, kapsayıcıya göre konumlandırma için */
             bottom: 10px;
             right: 10px;
-            /* Sağ altta */
             width: 250px;
-            height: 25px;
-            background-color: #555;
-            border-radius: 5px;
-            overflow: hidden;
+            height: 35px;
+            /* Buton için biraz daha yükseklik */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,13 +70,18 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
             z-index: 9998;
+            box-sizing: border-box;
+            /* Padding dahil boyuta etki etsin */
+            padding: 0 5px;
+            /* İçerideki elemanlar için boşluk */
         }
 
-        #download-progress-container.active {
+        #download-status-area.active {
             opacity: 1;
             visibility: visible;
         }
 
+        /* İlerleme Çubuğu Stilleri */
         #download-progress-bar {
             height: 100%;
             background-color: #007bff;
@@ -90,6 +91,8 @@
             position: absolute;
             left: 0;
             top: 0;
+            border-radius: 5px;
+            /* Köşeleri yuvarlak yap */
         }
 
         #download-progress-text {
@@ -98,6 +101,29 @@
             font-size: 13px;
             font-weight: bold;
             text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Yeniden Başlat Butonu Stilleri */
+        #restart-button {
+            background-color: #28a745;
+            /* Yeşil buton */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: none;
+            /* Başlangıçta gizli */
+            width: 100%;
+            /* Kapsayıcının tamamını kapla */
+            box-sizing: border-box;
+            height: 100%;
+        }
+
+        #restart-button:hover {
+            background-color: #218838;
         }
     </style>
 </head>
@@ -111,10 +137,11 @@
 
         <div id="version-info">Versiyon: Yükleniyor...</div>
 
-        <!-- İndirme ilerlemesi buraya taşındı -->
-        <div id="download-progress-container">
+        <!-- İndirme ilerlemesi ve yeniden başlatma butonu aynı alanda yönetilecek -->
+        <div id="download-status-area">
             <div id="download-progress-bar"></div>
             <span id="download-progress-text"></span>
+            <button id="restart-button" style="display: none;">Güncellemeyi Kur ve Yeniden Başlat</button>
         </div>
     </div>
     <script defer src="./searchView.js"></script>

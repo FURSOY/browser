@@ -14,6 +14,11 @@ let bridge = {
     // Versiyon ve Progress (search.html için)
     onUpdateProgress: (callback) => ipcRenderer.on('update-progress', callback),
     onSetVersion: (callback) => ipcRenderer.on('set-version', callback),
+
+    // Güncelleme hazır olduğunda tetiklenecek olay
+    onUpdateReadyToInstall: (callback) => ipcRenderer.on('update-ready-to-install', callback),
+    // Uygulamayı yeniden başlatmak için main sürecine mesaj gönderme
+    restartApp: () => ipcRenderer.send('restart-app'),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

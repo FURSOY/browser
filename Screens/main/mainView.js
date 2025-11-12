@@ -13,14 +13,17 @@ if (addressBar) {
             if (!input) return;
 
             let url;
+            // Basit bir URL tespiti: boşluk içermeyen ve nokta içeren bir stringi URL kabul et
             const isUrl = input.includes('.') && !input.includes(' ');
 
             if (isUrl) {
                 url = input;
+                // Eğer http/https ile başlamıyorsa güvenli bir şekilde https ekle
                 if (!url.startsWith('http://') && !url.startsWith('https://')) {
                     url = 'https://' + url;
                 }
             } else {
+                // Değilse, Google'da arama yap
                 url = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
             }
 
@@ -67,6 +70,8 @@ window.bridge.onURLUpdate((event, url) => {
 });
 
 // --- Progress Bar Logic ---
+// mainView.js'de şu an için bir ilerleme çubuğu yok, ancak isterseniz ekleyebilirsiniz.
+// Şimdilik sadece konsola logluyor.
 window.bridge.onUpdateProgress((event, percent) => {
     console.log(`Manager received progress: ${percent}%`);
 });
@@ -74,9 +79,9 @@ window.bridge.onUpdateProgress((event, percent) => {
 // --- Version Info Logic ---
 window.bridge.onSetVersion((event, version) => {
     console.log(`Manager received version: ${version}`);
+    // Eğer main.html içinde versiyon göstermek isterseniz buraya ekleyebilirsiniz.
+    // Örneğin: document.getElementById('main-version-info').textContent = `Versiyon: ${version}`;
 });
-
-console.log("mainView.js tamamen yüklendi ve çalışıyor");
 
 // --- Klavye Kısayolu: F12 ile DevTools ---
 document.addEventListener('keydown', (event) => {
