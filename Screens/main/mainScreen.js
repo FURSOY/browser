@@ -1,5 +1,3 @@
-// --- START OF FILE mainScreen.js ---
-
 const { app, BrowserWindow, BrowserView, ipcMain, Notification } = require("electron");
 const path = require("path");
 const url = require('url');
@@ -92,10 +90,10 @@ class MainScreen {
 
         this.handleMessages();
 
-        // main.html yüklendiğinde versiyon bilgisini göndermek için
-        this.window.webContents.on('did-finish-load', () => {
-            this.window.webContents.send('set-version', app.getVersion());
-        });
+        // main.html yüklendikten sonra versiyon bilgisini BrowserView'e göndermek için
+        // this.window.webContents.on('did-finish-load', () => {
+        //     // Bu kısım artık direkt sendVersion metodunda ele alınacak
+        // });
     }
 
     setupBrowserView() {
@@ -116,6 +114,13 @@ class MainScreen {
         // BrowserView'e başlangıç sayfasını (search.html) yükle
         const searchPagePath = path.join(__dirname, './search.html');
         this.view.webContents.loadURL(`file://${searchPagePath}`);
+
+        // BrowserView yüklendiğinde versiyon bilgisini gönder
+        this.view.webContents.once('did-finish-load', () => {
+            console.log('BrowserView (search.html) yüklendi, versiyon gönderiliyor.');
+            this.sendVersion(app.getVersion()); // BrowserView yüklendiğinde versiyonu gönder
+        });
+
 
         // BrowserView'de navigasyon olduğunda main'daki adres çubuğunu güncelle
         this.view.webContents.on('did-navigate', (event, navigatedUrl) => {
@@ -172,7 +177,6 @@ class MainScreen {
                 width: Math.floor(bounds.width),
                 height: Math.floor(bounds.height)
             });
-            console.log("BrowserView bounds updated:", bounds);
         } else {
             console.warn("webview-container-placeholder bulunamadı.");
             // Eğer placeholder bulunamazsa, varsayılan bir değer kullan
@@ -219,15 +223,17 @@ class MainScreen {
     }
 
     sendProgress(percent) {
-        // main.html'e de ilerleme bilgisini gönderilebilir, ancak şu anlık sadece BrowserView'e gidiyor.
-        // this.window.webContents.send('update-progress', percent);
+        // İlerleme bilgisini sadece BrowserView'e (search.html) gönder
         if (this.view && this.view.webContents) {
             this.view.webContents.send('update-progress', percent);
         }
     }
 
     sendVersion(version) {
+        // Versiyon bilgisini hem ana pencereye (main.html) hem de BrowserView'e (search.html) gönder
+        // main.html'de versiyon göstermiyorsak bu satır gerekli değil ama genel bir senkronizasyon için kalabilir.
         this.window.webContents.send('set-version', version);
+
         if (this.view && this.view.webContents) {
             this.view.webContents.send('set-version', version);
         }

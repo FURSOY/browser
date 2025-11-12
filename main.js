@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const MainScreen = require("./Screens/main/mainScreen");
-const Globals = require("./globals");
+const Globals = require("./globals"); // Bu dosyayı kullanmıyorsanız kaldırabilirsiniz.
 const { autoUpdater } = require("electron-updater");
 
 let curWindow;
@@ -19,6 +19,7 @@ app.whenReady().then(() => {
     // ve ilk bildirimleri gönder.
     curWindow.onMainWindowLoad(() => {
         console.log("Ana pencere yüklendi, bildirimler gönderiliyor...");
+        // Ana pencere ve BrowserView'e versiyon bilgisini gönder
         curWindow.sendVersion(app.getVersion());
         // Uygulama açıldığında güncelleme kontrolü yap
         autoUpdater.checkForUpdates();
@@ -29,15 +30,17 @@ app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
+// Windows'ta tüm pencereler kapandığında uygulamayı sonlandır
+app.on("window-all-closed", function () {
+    if (process.platform !== "darwin") app.quit();
+});
+
+
 autoUpdater.on("update-available", (info) => {
     curWindow.sendNotification(`Yeni güncelleme bulundu!`, false);
     curWindow.sendNotification(`Yeni versiyon ${info.version} indiriliyor...`, false);
     autoUpdater.downloadUpdate();
 });
-
-// autoUpdater.on("update-not-available", (info) => {
-//     curWindow.sendNotification(`Güncelleme bulunamadı.`, true);
-// });
 
 /*Download Progress*/
 autoUpdater.on("download-progress", (progressObj) => {
@@ -51,29 +54,26 @@ autoUpdater.on("download-progress", (progressObj) => {
 
 /*Download Completion Message*/
 autoUpdater.on("update-downloaded", (info) => {
-    curWindow.sendNotification(`Güncelleme indirildi! Yeniden başlatılıyor...`, false);
+    curWindow.sendNotification(`Güncelleme indirildi! Yeniden başlatmak için butona tıklayın.`, false);
     curWindow.sendProgress(100); // İlerleme çubuğunu doldur
     // search.html'e yeniden başlatma isteğini gönder
     curWindow.sendUpdateReady();
-
-    // Uygulama tamamen kapandığında otomatik olarak güncellemeyi kurup yeniden başlayacak.
-    // Kullanıcıya buton ile yeniden başlatma seçeneği sunulacağı için burada manuel olarak quitAndInstall çağırmıyoruz.
-    // Kullanıcı butona bastığında çağıracağız.
 });
 
 /*Error Handling*/
 autoUpdater.on("error", (err) => {
     curWindow.sendNotification(`Güncelleme hatası: ${err.message || err}`, false);
     curWindow.sendProgress(0);
+    // Hata durumunda da butonları sıfırla
+    if (curWindow && curWindow.view && curWindow.view.webContents) {
+        curWindow.view.webContents.send('update-progress', 0); // İlerleme çubuğunu sıfırla
+        curWindow.view.webContents.send('update-ready-to-install', false); // Butonu gizle
+    }
 });
 
 // Global exception handler
 process.on("uncaughtException", function (err) {
     console.error("uncaughtExceptionHatası:", err);
-});
-
-app.on("window-all-closed", function () {
-    if (process.platform !== "darwin") app.quit();
 });
 
 // "restart-app" mesajını dinle, bu mesaj searchView.js'den gelecek

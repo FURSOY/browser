@@ -1,5 +1,3 @@
-// --- START OF FILE mainView.js ---
-
 console.log("mainView.js yüklendi");
 
 // --- Address Bar Logic ---
@@ -70,18 +68,18 @@ window.bridge.onURLUpdate((event, url) => {
 });
 
 // --- Progress Bar Logic ---
-// mainView.js'de şu an için bir ilerleme çubuğu yok, ancak isterseniz ekleyebilirsiniz.
-// Şimdilik sadece konsola logluyor.
+// mainView.js'de şu an için bir ilerleme çubuğu yok, bu nedenle bu kısım sadece konsola loglama yapar.
 window.bridge.onUpdateProgress((event, percent) => {
     console.log(`Manager received progress: ${percent}%`);
 });
 
 // --- Version Info Logic ---
+// main.html'de versiyon göstermediğimiz için bu kısım da sadece konsola loglama yapar.
 window.bridge.onSetVersion((event, version) => {
     console.log(`Manager received version: ${version}`);
-    // Eğer main.html içinde versiyon göstermek isterseniz buraya ekleyebilirsiniz.
-    // Örneğin: document.getElementById('main-version-info').textContent = `Versiyon: ${version}`;
 });
+
+console.log("mainView.js tamamen yüklendi ve çalışıyor");
 
 // --- Klavye Kısayolu: F12 ile DevTools ---
 document.addEventListener('keydown', (event) => {
@@ -91,5 +89,3 @@ document.addEventListener('keydown', (event) => {
         window.bridge.toggleDevTools();
     }
 });
-
-// --- END OF FILE mainView.js ---
