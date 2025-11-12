@@ -1,3 +1,5 @@
+// --- START OF FILE mainScreen.js ---
+
 const { app, BrowserWindow, BrowserView, ipcMain, Notification } = require("electron");
 const path = require("path");
 const url = require('url');
@@ -39,24 +41,17 @@ class MainScreen {
         warmupView.webContents.loadURL('https://www.google.com').then(() => {
             console.log("Google warmup successful.");
             // Yükleme bittikten sonra view'ı kaldır ve yok et
-            if (this.window && !this.window.isDestroyed()) {
+            if (this.window && !this.window.isDestroyed() && warmupView && !warmupView.webContents.isDestroyed()) {
                 this.window.removeBrowserView(warmupView);
-            }
-            try {
-                warmupView.destroy();
-            } catch (e) {
-                // Ignore if already destroyed
-                console.warn("Warmup view already destroyed or unable to destroy:", e);
+                warmupView.destroy(); // BrowserView'ı doğru şekilde yok et
             }
         }).catch(err => {
             console.error("Google warmup failed:", err);
             // Hata durumunda da view'ı temizle
-            if (this.window && !this.window.isDestroyed()) {
+            if (this.window && !this.window.isDestroyed() && warmupView && !warmupView.webContents.isDestroyed()) {
                 this.window.removeBrowserView(warmupView);
+                warmupView.destroy(); // BrowserView'ı doğru şekilde yok et
             }
-            try {
-                warmupView.destroy();
-            } catch (e) { /* ignore */ }
         });
 
 
@@ -89,11 +84,6 @@ class MainScreen {
         });
 
         this.handleMessages();
-
-        // main.html yüklendikten sonra versiyon bilgisini BrowserView'e göndermek için
-        // this.window.webContents.on('did-finish-load', () => {
-        //     // Bu kısım artık direkt sendVersion metodunda ele alınacak
-        // });
     }
 
     setupBrowserView() {
@@ -150,7 +140,7 @@ class MainScreen {
     }
 
     async updateViewBounds() {
-        if (!this.view || !this.window || !this.window.webContents) {
+        if (!this.view || !this.window || !this.window.webContents || this.window.isDestroyed()) {
             return;
         }
 
@@ -177,8 +167,9 @@ class MainScreen {
                 width: Math.floor(bounds.width),
                 height: Math.floor(bounds.height)
             });
+            // console.log("BrowserView bounds updated:", bounds); // Aşırı loglamayı önlemek için yorum satırı yapıldı
         } else {
-            console.warn("webview-container-placeholder bulunamadı.");
+            console.warn("webview-container-placeholder bulunamadı. Varsayılan sınırlara ayarlanıyor.");
             // Eğer placeholder bulunamazsa, varsayılan bir değer kullan
             const contentBounds = this.window.getContentBounds();
             this.view.setBounds({
@@ -224,71 +215,76 @@ class MainScreen {
 
     sendProgress(percent) {
         // İlerleme bilgisini sadece BrowserView'e (search.html) gönder
-        if (this.view && this.view.webContents) {
+        if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
             this.view.webContents.send('update-progress', percent);
         }
     }
 
     sendVersion(version) {
         // Versiyon bilgisini hem ana pencereye (main.html) hem de BrowserView'e (search.html) gönder
-        // main.html'de versiyon göstermiyorsak bu satır gerekli değil ama genel bir senkronizasyon için kalabilir.
-        this.window.webContents.send('set-version', version);
+        if (this.window && !this.window.isDestroyed()) {
+            this.window.webContents.send('set-version', version);
+        }
 
-        if (this.view && this.view.webContents) {
+        if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
             this.view.webContents.send('set-version', version);
         }
     }
 
     // Güncelleme hazır olduğunda search.html'e bildirim gönderen metod
     sendUpdateReady() {
-        if (this.view && this.view.webContents) {
+        if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
             this.view.webContents.send('update-ready-to-install');
         }
     }
 
     close() {
-        this.window.close();
+        if (this.window && !this.window.isDestroyed()) {
+            this.window.close();
+        }
         ipcMain.removeAllListeners();
     }
 
     hide() {
-        this.window.hide();
+        if (this.window && !this.window.isDestroyed()) {
+            this.window.hide();
+        }
     }
 
     handleMessages() {
         ipcMain.on('navigate-to', (event, url) => {
-            if (this.view && this.view.webContents) {
+            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
                 this.view.webContents.loadURL(url);
             }
         });
 
         ipcMain.on('nav-back', () => {
-            if (this.view && this.view.webContents && this.view.webContents.canGoBack()) {
+            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed() && this.view.webContents.canGoBack()) {
                 this.view.webContents.goBack();
             }
         });
 
         ipcMain.on('nav-forward', () => {
-            if (this.view && this.view.webContents && this.view.webContents.canGoForward()) {
+            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed() && this.view.webContents.canGoForward()) {
                 this.view.webContents.goForward();
             }
         });
 
         ipcMain.on('nav-reload', () => {
-            if (this.view && this.view.webContents) {
+            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
                 this.view.webContents.reload();
             }
         });
 
         ipcMain.on('nav-home', () => {
             const searchPagePath = path.join(__dirname, './search.html');
-            if (this.view && this.view.webContents) {
+            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
                 this.view.webContents.loadURL(`file://${searchPagePath}`);
             }
         });
 
         ipcMain.on('toggleDevTools', () => {
-            if (this.view && this.view.webContents) {
+            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
                 if (this.view.webContents.isDevToolsOpened()) {
                     this.view.webContents.closeDevTools();
                 } else {

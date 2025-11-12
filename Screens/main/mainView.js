@@ -1,3 +1,5 @@
+// --- START OF FILE mainView.js ---
+
 console.log("mainView.js yüklendi");
 
 // --- Address Bar Logic ---
@@ -70,13 +72,13 @@ window.bridge.onURLUpdate((event, url) => {
 // --- Progress Bar Logic ---
 // mainView.js'de şu an için bir ilerleme çubuğu yok, bu nedenle bu kısım sadece konsola loglama yapar.
 window.bridge.onUpdateProgress((event, percent) => {
-    console.log(`Manager received progress: ${percent}%`);
+    // console.log(`Manager received progress: ${percent}%`); // Bu logu kaldırdık, sadece searchView'de önemli
 });
 
 // --- Version Info Logic ---
 // main.html'de versiyon göstermediğimiz için bu kısım da sadece konsola loglama yapar.
 window.bridge.onSetVersion((event, version) => {
-    console.log(`Manager received version: ${version}`);
+    console.log(`MainView received version: ${version}`); // Sadece konsola logla
 });
 
 console.log("mainView.js tamamen yüklendi ve çalışıyor");
@@ -89,3 +91,5 @@ document.addEventListener('keydown', (event) => {
         window.bridge.toggleDevTools();
     }
 });
+
+// --- END OF FILE mainView.js ---

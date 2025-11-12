@@ -30,8 +30,11 @@ if (window.bridge) {
             progressText.style.display = 'block'; // Metni göster
             restartButton.style.display = 'none'; // Butonu gizle
         } else {
-            // İndirme %0 veya %100 olduğunda (butonu göstermek için bekliyor)
-            downloadStatusArea.classList.remove('active'); // Alanı gizle
+            // İndirme %0 veya %100 olduğunda (butonu göstermek için bekliyor veya gizleniyor)
+            // Eğer percent 0 ise veya 100 ise (ama henüz update-ready-to-install gelmediyse)
+            // indirme alanını pasif yap ve tüm indirme elemanlarını gizle.
+            // update-ready-to-install geldiğinde buton görünecek.
+            downloadStatusArea.classList.remove('active');
             progressBar.style.width = '0%';
             progressText.textContent = '';
             progressBar.style.display = 'none';

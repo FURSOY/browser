@@ -37,37 +37,33 @@ app.on("window-all-closed", function () {
 
 
 autoUpdater.on("update-available", (info) => {
-    curWindow.sendNotification(`Yeni güncelleme bulundu!`, false);
-    curWindow.sendNotification(`Yeni versiyon ${info.version} indiriliyor...`, false);
+    curWindow.sendNotification(`Yeni güncelleme bulundu! Versiyon: ${info.version}`, false);
+    curWindow.sendNotification(`Güncelleme indiriliyor...`, false);
     autoUpdater.downloadUpdate();
 });
 
-/*Download Progress*/
 autoUpdater.on("download-progress", (progressObj) => {
     let log_message = `İndirme hızı: ${(progressObj.bytesPerSecond / 1024 / 1024).toFixed(2)} MB/s`;
     log_message += ` - İndirilen: ${progressObj.percent.toFixed(1)}%`;
     log_message += ` (${(progressObj.transferred / 1024 / 1024).toFixed(2)} MB / ${(progressObj.total / 1024 / 1024).toFixed(2)} MB)`;
 
-    curWindow.sendNotification(`Güncelleme indiriliyor: ${progressObj.percent.toFixed(1)}%`, false);
     curWindow.sendProgress(progressObj.percent);
 });
 
-/*Download Completion Message*/
 autoUpdater.on("update-downloaded", (info) => {
     curWindow.sendNotification(`Güncelleme indirildi! Yeniden başlatmak için butona tıklayın.`, false);
-    curWindow.sendProgress(100); // İlerleme çubuğunu doldur
-    // search.html'e yeniden başlatma isteğini gönder
-    curWindow.sendUpdateReady();
+    curWindow.sendProgress(100); // search.html'deki ilerleme çubuğunu doldur
+    curWindow.sendUpdateReady(); // search.html'e butonu göstermesi için mesaj gönder
 });
 
 /*Error Handling*/
 autoUpdater.on("error", (err) => {
     curWindow.sendNotification(`Güncelleme hatası: ${err.message || err}`, false);
-    curWindow.sendProgress(0);
-    // Hata durumunda da butonları sıfırla
+    curWindow.sendProgress(0); // search.html'deki barı sıfırla
+    // Hata durumunda da butonları sıfırla/gizle
     if (curWindow && curWindow.view && curWindow.view.webContents) {
         curWindow.view.webContents.send('update-progress', 0); // İlerleme çubuğunu sıfırla
-        curWindow.view.webContents.send('update-ready-to-install', false); // Butonu gizle
+        curWindow.view.webContents.send('update-ready-to-install', false); // Butonu gizle (false değeri ile)
     }
 });
 
