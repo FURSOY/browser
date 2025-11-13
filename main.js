@@ -50,7 +50,6 @@ autoUpdater.on("download-progress", (progressObj) => {
 });
 
 autoUpdater.on("update-downloaded", (info) => {
-    curWindow.sendNotification(`Güncelleme indirildi! Yeniden başlatmak için butona tıklayın.`, false);
     curWindow.sendProgress(100); // search.html'deki ilerleme çubuğunu doldur
     curWindow.sendUpdateReady(); // search.html'e butonu göstermesi için mesaj gönder
 });
