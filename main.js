@@ -2,6 +2,9 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const MainScreen = require("./Screens/main/mainScreen");
 const Globals = require("./globals"); // Bu dosyayı kullanmıyorsanız kaldırabilirsiniz.
 const { autoUpdater } = require("electron-updater");
+require('electron-reload')(__dirname, {
+    electron: require('path').join(__dirname, 'node_modules', '.bin', 'electron' + (process.platform === 'win32' ? '.cmd' : ''))
+});
 
 let curWindow;
 
@@ -18,10 +21,6 @@ app.whenReady().then(() => {
     // MainScreen penceresi tamamen yüklendikten sonra otomatik güncelleyiciyi başlat
     // ve ilk bildirimleri gönder.
     curWindow.onMainWindowLoad(() => {
-        console.log("Ana pencere yüklendi, bildirimler gönderiliyor...");
-        // Ana pencere ve BrowserView'e versiyon bilgisini gönder
-        curWindow.sendVersion(app.getVersion());
-        // Uygulama açıldığında güncelleme kontrolü yap
         autoUpdater.checkForUpdates();
     });
 });
