@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FURSOY Browser Manager</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        /* Body tüm viewport'u kaplasın ve dikey flex düzeni olsun */
+    </style>
+</head>
+
+<body>
+    <!-- Tarayıcı Kontrol Çubuğu -->
+    <div id="browser-controls">
+        <button id="back-btn">◀</button>
+        <button id="forward-btn">▶</button>
+        <button id="reload-btn">↻</button>
+        <button id="home-btn">🏠</button>
+        <input type="text" id="address-bar" placeholder="Search Google or type a URL">
+    </div>
+
+    <!-- BrowserView'in yerleştirileceği boş yer tutucu -->
+    <div id="webview-container-placeholder">
+        <!-- Electron's BrowserView will occupy this space -->
+    </div>
+
+    <script defer src="./renderer.js"></script>
+</body>
+
+</html>

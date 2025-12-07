@@ -1,8 +1,5 @@
-// --- START OF FILE mainView.js ---
-
 console.log("mainView.js yüklendi");
 
-// --- Address Bar Logic ---
 const addressBar = document.getElementById('address-bar');
 
 if (addressBar) {
@@ -13,17 +10,14 @@ if (addressBar) {
             if (!input) return;
 
             let url;
-            // Basit bir URL tespiti: boşluk içermeyen ve nokta içeren bir stringi URL kabul et
             const isUrl = input.includes('.') && !input.includes(' ');
 
             if (isUrl) {
                 url = input;
-                // Eğer http/https ile başlamıyorsa güvenli bir şekilde https ekle
                 if (!url.startsWith('http://') && !url.startsWith('https://')) {
                     url = 'https://' + url;
                 }
             } else {
-                // Değilse, Google'da arama yap
                 url = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
             }
 

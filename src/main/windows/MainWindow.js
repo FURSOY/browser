@@ -4,7 +4,7 @@ const { app, BrowserWindow, BrowserView, ipcMain, Notification } = require("elec
 const path = require("path");
 const url = require('url');
 
-class MainScreen {
+class MainWindow {
     window;
     view;
     _onLoadCallback;
@@ -20,13 +20,13 @@ class MainScreen {
             width: this.position.width,
             height: this.position.height,
             title: "FURSOY Browser",
-            icon: path.join(__dirname, "../../assets/icon.ico"),
+            icon: path.join(__dirname, "../../../assets/icon.ico"),
             show: false,
             acceptFirstMouse: false,
             autoHideMenuBar: true,
             webPreferences: {
                 contextIsolation: true,
-                preload: path.join(__dirname, "./mainPreload.js"),
+                preload: path.join(__dirname, "../../preload/main.js"),
             },
         });
 
@@ -54,7 +54,7 @@ class MainScreen {
 
 
         // Ana pencereye main.html'i yükle
-        const mainPagePath = path.join(__dirname, './main.html');
+        const mainPagePath = path.join(__dirname, '../../renderer/main/index.html');
         this.window.loadFile(mainPagePath);
 
         // main.html yüklendiğinde callback'i çağır
@@ -91,7 +91,7 @@ class MainScreen {
                 contextIsolation: true,
                 nodeIntegration: false,
                 webSecurity: true,
-                preload: path.join(__dirname, "./searchPreload.js"),
+                preload: path.join(__dirname, "../../preload/search.js"),
             }
         });
         this.window.setBrowserView(this.view);
@@ -100,21 +100,19 @@ class MainScreen {
         this.updateViewBounds();
 
         // BrowserView'e başlangıç sayfasını (search.html) yükle
-        const searchPagePath = path.join(__dirname, './search.html');
+        const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
         this.view.webContents.loadURL(`file://${searchPagePath}`);
 
         // BrowserView yüklendiğinde versiyon bilgisini gönder
         this.view.webContents.on('did-finish-load', () => {
             const currentURL = this.view.webContents.getURL();
-            const searchPagePath = path.join(__dirname, './search.html');
-            const searchPageURL = url.format({
-                pathname: searchPagePath,
-                protocol: 'file:',
-                slashes: true
-            });
+            const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
+            // Normalize both paths for reliable comparison
+            const currentPath = url.fileURLToPath(currentURL);
+            const searchPath = path.resolve(searchPagePath);
 
             // Sadece search.html yüklendiğinde versiyonu gönder
-            if (currentURL === searchPageURL) {
+            if (path.normalize(currentPath) === path.normalize(searchPath)) {
                 console.log('BrowserView (search.html) yüklendi, versiyon gönderiliyor.');
                 this.sendVersion(app.getVersion());
             }
@@ -203,7 +201,7 @@ class MainScreen {
             const notification = new Notification({
                 title: 'FURSOY Browser',
                 body: message,
-                icon: path.join(__dirname, "../../assets/icon.ico"),
+                icon: path.join(__dirname, "../../../assets/icon.ico"),
                 silent: false,
                 timeoutType: autoHide ? 'default' : 'never'
             });
@@ -286,7 +284,7 @@ class MainScreen {
         });
 
         ipcMain.on('nav-home', () => {
-            const searchPagePath = path.join(__dirname, './search.html');
+            const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
             if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
                 this.view.webContents.loadURL(`file://${searchPagePath}`);
             }
@@ -302,12 +300,8 @@ class MainScreen {
             }
         });
 
-        // Uygulamayı yeniden başlat
-        ipcMain.on('restart-app', () => {
-            app.relaunch();
-            app.exit();
-        });
+
     }
 }
 
-module.exports = MainScreen;
+module.exports = MainWindow;
