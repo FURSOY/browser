@@ -17,6 +17,17 @@ let bridge = {
 
     // DevTools
     toggleDevTools: () => ipcRenderer.send('toggleDevTools'),
+
+    // Tab Management
+    newTab: (url) => ipcRenderer.send('tab-new', url),
+    switchTab: (id) => ipcRenderer.send('tab-switch', id),
+    closeTab: (id) => ipcRenderer.send('tab-close', id),
+
+    // Tab Events
+    onTabCreated: (callback) => ipcRenderer.on('tab-created', callback),
+    onTabRemoved: (callback) => ipcRenderer.on('tab-removed', callback),
+    onTabUpdated: (callback) => ipcRenderer.on('tab-updated', callback),
+    onActiveTabChanged: (callback) => ipcRenderer.on('tab-active-changed', callback),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

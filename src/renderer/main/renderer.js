@@ -1,3 +1,80 @@
+// --- Tab Management Logic ---
+const tabsList = document.getElementById('tabs-list');
+const newTabBtn = document.getElementById('new-tab-btn');
+
+let tabs = [];
+let activeTabId = null;
+
+// New Tab Button
+if (newTabBtn) {
+    newTabBtn.addEventListener('click', () => {
+        window.bridge.newTab();
+    });
+}
+
+function renderTabs() {
+    if (!tabsList) return;
+    tabsList.innerHTML = '';
+
+    tabs.forEach(tab => {
+        const tabEl = document.createElement('div');
+        tabEl.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
+        tabEl.dataset.id = tab.id;
+
+        const titleEl = document.createElement('span');
+        titleEl.className = 'tab-title';
+        titleEl.textContent = tab.title || 'New Tab';
+
+        const closeEl = document.createElement('div');
+        closeEl.className = 'tab-close';
+        closeEl.textContent = '✕';
+        closeEl.onclick = (e) => {
+            e.stopPropagation(); // Prevent switching when closing
+            window.bridge.closeTab(tab.id);
+        };
+
+        tabEl.appendChild(titleEl);
+        tabEl.appendChild(closeEl);
+
+        tabEl.onclick = () => {
+            window.bridge.switchTab(tab.id);
+        };
+
+        tabsList.appendChild(tabEl);
+    });
+
+    // Scroll to end (for new tabs)
+    // requestAnimationFrame ensures DOM is updated
+    requestAnimationFrame(() => {
+        tabsList.scrollLeft = tabsList.scrollWidth;
+    });
+}
+
+// IPC Events for Tabs
+window.bridge.onTabCreated((event, { id, title }) => {
+    tabs.push({ id, title });
+    renderTabs();
+});
+
+window.bridge.onTabRemoved((event, id) => {
+    tabs = tabs.filter(t => t.id !== id);
+    renderTabs();
+});
+
+window.bridge.onTabUpdated((event, { id, title }) => {
+    const tab = tabs.find(t => t.id === id);
+    if (tab) {
+        tab.title = title;
+        renderTabs();
+    }
+});
+
+window.bridge.onActiveTabChanged((event, id) => {
+    activeTabId = id;
+    renderTabs();
+});
+
+
 console.log("mainView.js yüklendi");
 
 const addressBar = document.getElementById('address-bar');
@@ -64,15 +141,13 @@ window.bridge.onURLUpdate((event, url) => {
 });
 
 // --- Progress Bar Logic ---
-// mainView.js'de şu an için bir ilerleme çubuğu yok, bu nedenle bu kısım sadece konsola loglama yapar.
 window.bridge.onUpdateProgress((event, percent) => {
-    // console.log(`Manager received progress: ${percent}%`); // Bu logu kaldırdık, sadece searchView'de önemli
+    // console.log(`Manager received progress: ${percent}%`);
 });
 
 // --- Version Info Logic ---
-// main.html'de versiyon göstermediğimiz için bu kısım da sadece konsola loglama yapar.
 window.bridge.onSetVersion((event, version) => {
-    console.log(`MainView received version: ${version}`); // Sadece konsola logla
+    console.log(`MainView received version: ${version}`);
 });
 
 console.log("mainView.js tamamen yüklendi ve çalışıyor");
@@ -85,5 +160,3 @@ document.addEventListener('keydown', (event) => {
         window.bridge.toggleDevTools();
     }
 });
-
-// --- END OF FILE mainView.js ---

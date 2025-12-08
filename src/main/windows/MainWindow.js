@@ -6,7 +6,8 @@ const url = require('url');
 
 class MainWindow {
     window;
-    view;
+    tabs = new Map(); // id -> { view, id }
+    activeTabId = null;
     _onLoadCallback;
 
     position = {
@@ -30,29 +31,6 @@ class MainWindow {
             },
         });
 
-        // --- Google Warm-up ---
-        // Uygulama açılışında BrowserView'lerin daha hızlı yüklenmesi için Google'ı önceden yükle
-        // Bu, kullanıcı ilk kez bir sayfayı ziyaret ettiğinde yaşanan gecikmeyi azaltır.
-        const warmupView = new BrowserView();
-        this.window.setBrowserView(warmupView); // Geçici olarak view'ı ayarla
-        const { width, height } = this.window.getBounds();
-        // Gizli bir alanda yükle
-        warmupView.setBounds({ x: -width, y: -height, width, height });
-        warmupView.webContents.loadURL('https://www.google.com').then(() => {
-            console.log("Google warmup successful.");
-            // Yükleme bittikten sonra view'ı kaldır
-            if (this.window && !this.window.isDestroyed() && warmupView && !warmupView.webContents.isDestroyed()) {
-                this.window.removeBrowserView(warmupView);
-            }
-        }).catch(err => {
-            console.error("Google warmup failed:", err);
-            // Hata durumunda da view'ı temizle
-            if (this.window && !this.window.isDestroyed() && warmupView && !warmupView.webContents.isDestroyed()) {
-                this.window.removeBrowserView(warmupView);
-            }
-        });
-
-
         // Ana pencereye main.html'i yükle
         const mainPagePath = path.join(__dirname, '../../renderer/main/index.html');
         this.window.loadFile(mainPagePath);
@@ -60,7 +38,7 @@ class MainWindow {
         // main.html yüklendiğinde callback'i çağır
         this.window.webContents.once('did-finish-load', () => {
             console.log('Main HTML yüklendi ve tüm JavaScript dosyaları çalıştı.');
-            this.setupBrowserView();
+            this.createTab(); // Start with one tab
 
             if (this._onLoadCallback) {
                 this._onLoadCallback();
@@ -74,19 +52,18 @@ class MainWindow {
             }
         });
 
-        // Pencere boyutu değiştiğinde BrowserView'i güncelle
+        // Pencere boyutu değiştiğinde Aktif BrowserView'i güncelle
         this.window.on('resize', () => {
-            if (this.view) {
-                this.updateViewBounds();
+            if (this.activeTabId) {
+                this.updateViewBounds(this.tabs.get(this.activeTabId).view);
             }
         });
 
         this.handleMessages();
     }
 
-    setupBrowserView() {
-        // BrowserView oluştur
-        this.view = new BrowserView({
+    createTab(urlToLoad) {
+        const view = new BrowserView({
             webPreferences: {
                 contextIsolation: true,
                 nodeIntegration: false,
@@ -94,60 +71,136 @@ class MainWindow {
                 preload: path.join(__dirname, "../../preload/search.js"),
             }
         });
-        this.window.setBrowserView(this.view);
 
-        // BrowserView'i kontrol çubuğunun altındaki alanı kaplayacak şekilde ayarla
-        this.updateViewBounds();
+        const id = Date.now().toString();
+        this.tabs.set(id, { view, id });
 
-        // BrowserView'e başlangıç sayfasını (search.html) yükle
+        // Default or specific URL
         const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
-        this.view.webContents.loadURL(`file://${searchPagePath}`);
+        const finalUrl = urlToLoad || `file://${searchPagePath}`;
 
-        // BrowserView yüklendiğinde versiyon bilgisini gönder
-        this.view.webContents.on('did-finish-load', () => {
-            const currentURL = this.view.webContents.getURL();
-            const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
-            // Normalize both paths for reliable comparison
-            const currentPath = url.fileURLToPath(currentURL);
-            const searchPath = path.resolve(searchPagePath);
+        view.webContents.loadURL(finalUrl);
 
-            // Sadece search.html yüklendiğinde versiyonu gönder
-            if (path.normalize(currentPath) === path.normalize(searchPath)) {
-                console.log('BrowserView (search.html) yüklendi, versiyon gönderiliyor.');
-                this.sendVersion(app.getVersion());
+        // Attach listeners
+        this.attachViewListeners(view, id);
+
+        // Inform renderer about new tab
+        this.window.webContents.send('tab-created', { id, title: 'New Tab' });
+
+        this.switchTab(id);
+    }
+
+    switchTab(id) {
+        if (!this.tabs.has(id)) return;
+
+        const prevTabId = this.activeTabId;
+        if (prevTabId) {
+            const prevView = this.tabs.get(prevTabId).view;
+            if (prevView && !prevView.webContents.isDestroyed()) {
+                this.window.removeBrowserView(prevView);
             }
-        });
+        }
 
+        this.activeTabId = id;
+        const newView = this.tabs.get(id).view;
 
-        // BrowserView'de navigasyon olduğunda main'daki adres çubuğunu güncelle
-        this.view.webContents.on('did-navigate', (event, navigatedUrl) => {
-            let finalUrl = '';
-            try {
-                const searchFilePath = path.normalize(searchPagePath);
-                if (navigatedUrl.startsWith('file://')) {
-                    const navigatedPath = path.normalize(url.fileURLToPath(navigatedUrl));
-                    if (navigatedPath !== searchFilePath) {
-                        finalUrl = navigatedUrl;
-                    } else {
-                        finalUrl = ''; // Eğer search.html ise adres çubuğunu boş bırak
-                    }
-                } else {
-                    finalUrl = navigatedUrl;
+        this.window.setBrowserView(newView);
+        this.updateViewBounds(newView);
+
+        // Notify Renderer active tab changed
+        this.window.webContents.send('tab-active-changed', id);
+
+        // Update address bar for the new active tab
+        if (newView && !newView.webContents.isDestroyed()) {
+            const currentURL = newView.webContents.getURL();
+            this.updateAddressBar(currentURL);
+        }
+    }
+
+    closeTab(id) {
+        if (!this.tabs.has(id)) return;
+
+        const tab = this.tabs.get(id);
+        const view = tab.view;
+
+        // If closing active tab, switch to another one first if possible
+        if (this.activeTabId === id) {
+            const iterator = this.tabs.keys();
+            let nextId = null;
+            for (const key of iterator) {
+                if (key !== id) {
+                    nextId = key;
+                    break; // Just pick the first available one for simplicity
                 }
-            } catch (e) {
-                console.error("URL parse error:", e);
-                finalUrl = navigatedUrl;
             }
-            this.window.webContents.send('update-address-bar', finalUrl);
+
+            if (nextId) {
+                this.switchTab(nextId);
+            } else {
+                // Last tab being closed, create a new one
+                this.createTab();
+                // Then continue to close the current one as the function proceeds
+            }
+        }
+
+        // Cleanup
+        if (view && !view.webContents.isDestroyed()) {
+            // this.window.removeBrowserView(view); // Already handled in switchTab logic if active
+            view.webContents.destroy();
+        }
+        this.tabs.delete(id);
+        this.window.webContents.send('tab-removed', id);
+    }
+
+    attachViewListeners(view, id) {
+        view.webContents.on('did-navigate', (event, url) => {
+            if (this.activeTabId === id) {
+                this.updateAddressBar(url);
+            }
         });
 
-        this.view.webContents.on('did-navigate-in-page', (event, navigatedUrl) => {
-            this.window.webContents.send('update-address-bar', navigatedUrl);
+        view.webContents.on('did-navigate-in-page', (event, url) => {
+            if (this.activeTabId === id) {
+                this.updateAddressBar(url);
+            }
+        });
+
+        view.webContents.on('page-title-updated', (event, title) => {
+            this.window.webContents.send('tab-updated', { id, title });
+        });
+
+        // Version info logic (legacy support for search.html)
+        view.webContents.on('did-finish-load', () => {
+            const currentURL = view.webContents.getURL();
+            if (currentURL.startsWith('file://')) {
+                const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
+                const currentPath = url.fileURLToPath(currentURL);
+                const searchPath = path.resolve(searchPagePath);
+
+                if (path.normalize(currentPath) === path.normalize(searchPath)) {
+                    this.sendVersion(app.getVersion(), view);
+                }
+            }
         });
     }
 
-    async updateViewBounds() {
-        if (!this.view || !this.window || !this.window.webContents || this.window.isDestroyed()) {
+    updateAddressBar(currentUrl) {
+        const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
+        // Check if we are on the home page
+        try {
+            const currentPath = url.fileURLToPath(currentUrl);
+            const searchPath = path.resolve(searchPagePath);
+            if (path.normalize(currentPath) === path.normalize(searchPath)) {
+                this.window.webContents.send('update-address-bar', '');
+                return;
+            }
+        } catch (e) { }
+
+        this.window.webContents.send('update-address-bar', currentUrl);
+    }
+
+    async updateViewBounds(view) {
+        if (!view || !this.window || !this.window.webContents || this.window.isDestroyed()) {
             return;
         }
 
@@ -168,22 +221,11 @@ class MainWindow {
         `);
 
         if (bounds) {
-            this.view.setBounds({
+            view.setBounds({
                 x: Math.floor(bounds.x),
                 y: Math.floor(bounds.y),
                 width: Math.floor(bounds.width),
                 height: Math.floor(bounds.height)
-            });
-            // console.log("BrowserView bounds updated:", bounds); // Aşırı loglamayı önlemek için yorum satırı yapıldı
-        } else {
-            console.warn("webview-container-placeholder bulunamadı. Varsayılan sınırlara ayarlanıyor.");
-            // Eğer placeholder bulunamazsa, varsayılan bir değer kullan
-            const contentBounds = this.window.getContentBounds();
-            this.view.setBounds({
-                x: 0,
-                y: 40, // Kontrol çubuğu yüksekliği varsayımı
-                width: contentBounds.width,
-                height: contentBounds.height - 40
             });
         }
     }
@@ -194,9 +236,6 @@ class MainWindow {
 
     // Windows Native Notification kullan
     sendNotification(message, autoHide = true) {
-        console.log("Windows bildirimi gönderiliyor:", message);
-
-        // Notification izni kontrolü
         if (Notification.isSupported()) {
             const notification = new Notification({
                 title: 'FURSOY Browser',
@@ -205,43 +244,39 @@ class MainWindow {
                 silent: false,
                 timeoutType: autoHide ? 'default' : 'never'
             });
-
             notification.show();
-
-            notification.on('click', () => {
-                // Bildirime tıklandığında pencereyi ön plana getir
-                if (this.window) {
-                    if (this.window.isMinimized()) this.window.restore();
-                    this.window.focus();
-                }
-            });
-        } else {
-            console.warn("Bildirimler desteklenmiyor.");
         }
     }
 
     sendProgress(percent) {
-        // İlerleme bilgisini sadece BrowserView'e (search.html) gönder
-        if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
-            this.view.webContents.send('update-progress', percent);
+        // Send to active tab's view
+        if (this.activeTabId) {
+            const view = this.tabs.get(this.activeTabId).view;
+            if (view && !view.webContents.isDestroyed()) {
+                view.webContents.send('update-progress', percent);
+            }
         }
     }
 
-    sendVersion(version) {
-        // Versiyon bilgisini hem ana pencereye (main.html) hem de BrowserView'e (search.html) gönder
+    sendVersion(version, targetView = null) {
+        // Send to main window
         if (this.window && !this.window.isDestroyed()) {
             this.window.webContents.send('set-version', version);
         }
 
-        if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
-            this.view.webContents.send('set-version', version);
+        // Send to specific view or active view
+        const viewToSend = targetView || (this.activeTabId ? this.tabs.get(this.activeTabId).view : null);
+        if (viewToSend && !viewToSend.webContents.isDestroyed()) {
+            viewToSend.webContents.send('set-version', version);
         }
     }
 
-    // Güncelleme hazır olduğunda search.html'e bildirim gönderen metod
     sendUpdateReady() {
-        if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
-            this.view.webContents.send('update-ready-to-install');
+        if (this.activeTabId) {
+            const view = this.tabs.get(this.activeTabId).view;
+            if (view && !view.webContents.isDestroyed()) {
+                view.webContents.send('update-ready-to-install');
+            }
         }
     }
 
@@ -259,48 +294,66 @@ class MainWindow {
     }
 
     handleMessages() {
+        // Tab Management
+        ipcMain.on('tab-new', (event, url) => {
+            this.createTab(url);
+        });
+
+        ipcMain.on('tab-switch', (event, id) => {
+            this.switchTab(id);
+        });
+
+        ipcMain.on('tab-close', (event, id) => {
+            this.closeTab(id);
+        });
+
+        // Navigation for ACTIVE tab
         ipcMain.on('navigate-to', (event, url) => {
-            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
-                this.view.webContents.loadURL(url);
+            if (this.activeTabId) {
+                const view = this.tabs.get(this.activeTabId).view;
+                view.webContents.loadURL(url);
             }
         });
 
         ipcMain.on('nav-back', () => {
-            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed() && this.view.webContents.canGoBack()) {
-                this.view.webContents.goBack();
+            if (this.activeTabId) {
+                const view = this.tabs.get(this.activeTabId).view;
+                if (view.webContents.canGoBack()) view.webContents.goBack();
             }
         });
 
         ipcMain.on('nav-forward', () => {
-            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed() && this.view.webContents.canGoForward()) {
-                this.view.webContents.goForward();
+            if (this.activeTabId) {
+                const view = this.tabs.get(this.activeTabId).view;
+                if (view.webContents.canGoForward()) view.webContents.goForward();
             }
         });
 
         ipcMain.on('nav-reload', () => {
-            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
-                this.view.webContents.reload();
+            if (this.activeTabId) {
+                const view = this.tabs.get(this.activeTabId).view;
+                view.webContents.reload();
             }
         });
 
         ipcMain.on('nav-home', () => {
-            const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
-            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
-                this.view.webContents.loadURL(`file://${searchPagePath}`);
+            if (this.activeTabId) {
+                const view = this.tabs.get(this.activeTabId).view;
+                const searchPagePath = path.join(__dirname, '../../renderer/home/index.html');
+                view.webContents.loadURL(`file://${searchPagePath}`);
             }
         });
 
         ipcMain.on('toggleDevTools', () => {
-            if (this.view && this.view.webContents && !this.view.webContents.isDestroyed()) {
-                if (this.view.webContents.isDevToolsOpened()) {
-                    this.view.webContents.closeDevTools();
+            if (this.activeTabId) {
+                const view = this.tabs.get(this.activeTabId).view;
+                if (view.webContents.isDevToolsOpened()) {
+                    view.webContents.closeDevTools();
                 } else {
-                    this.view.webContents.openDevTools({ mode: "detach" });
+                    view.webContents.openDevTools({ mode: "detach" });
                 }
             }
         });
-
-
     }
 }
 
