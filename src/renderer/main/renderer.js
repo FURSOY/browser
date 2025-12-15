@@ -152,6 +152,29 @@ window.bridge.onSetVersion((event, version) => {
 
 console.log("mainView.js tamamen yüklendi ve çalışıyor");
 
+// --- Window Controls Logic ---
+const minBtn = document.getElementById('min-btn');
+const maxBtn = document.getElementById('max-btn');
+const closeBtn = document.getElementById('close-btn');
+
+if (minBtn) {
+    minBtn.addEventListener('click', () => {
+        window.bridge.minimize();
+    });
+}
+
+if (maxBtn) {
+    maxBtn.addEventListener('click', () => {
+        window.bridge.maximize();
+    });
+}
+
+if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+        window.bridge.close();
+    });
+}
+
 // --- Klavye Kısayolu: F12 ile DevTools ---
 document.addEventListener('keydown', (event) => {
     if (event.key === 'F12') {

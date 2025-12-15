@@ -28,6 +28,11 @@ let bridge = {
     onTabRemoved: (callback) => ipcRenderer.on('tab-removed', callback),
     onTabUpdated: (callback) => ipcRenderer.on('tab-updated', callback),
     onActiveTabChanged: (callback) => ipcRenderer.on('tab-active-changed', callback),
+
+    // Window Controls
+    minimize: () => ipcRenderer.send('window-minimize'),
+    maximize: () => ipcRenderer.send('window-maximize'),
+    close: () => ipcRenderer.send('window-close'),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

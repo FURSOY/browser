@@ -23,6 +23,8 @@ class MainWindow {
             title: "FURSOY Browser",
             icon: path.join(__dirname, "../../../assets/icon.ico"),
             show: false,
+            frame: false,
+            backgroundColor: '#202124',
             acceptFirstMouse: false,
             autoHideMenuBar: true,
             webPreferences: {
@@ -71,6 +73,7 @@ class MainWindow {
                 preload: path.join(__dirname, "../../preload/search.js"),
             }
         });
+        view.setBackgroundColor('#202124');
 
         const id = Date.now().toString();
         this.tabs.set(id, { view, id });
@@ -353,6 +356,23 @@ class MainWindow {
                     view.webContents.openDevTools({ mode: "detach" });
                 }
             }
+        });
+
+        // Window Controls
+        ipcMain.on('window-minimize', () => {
+            this.window.minimize();
+        });
+
+        ipcMain.on('window-maximize', () => {
+            if (this.window.isMaximized()) {
+                this.window.unmaximize();
+            } else {
+                this.window.maximize();
+            }
+        });
+
+        ipcMain.on('window-close', () => {
+            this.window.close();
         });
     }
 }

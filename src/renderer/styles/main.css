@@ -6,41 +6,31 @@ body {
     padding: 0;
     overflow: hidden;
     background-color: #202124;
-    /* Darker background for tab bar */
 }
 
-/* TABS STYLE */
 #tabs-container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     background-color: #202124;
-    padding: 8px 10px 0 10px;
-    /* Top padding, no bottom padding as tabs sit on controls */
+    padding: 0 140px 0 0;
+    /* Add right padding to reserve space for window controls */
     height: 40px;
     -webkit-app-region: drag;
-    /* Allow dragging window by tab bar empty space */
+    position: relative;
+    box-sizing: border-box;
+    /* Ensure padding is included in width */
 }
 
 #tabs-list {
     display: flex;
-    /* Remove flex: 1 to allow button to sit next to it naturally, 
-       BUT we want it to take available space.
-       The issue is flex:1 pushes next element to the end.
-       Actually, we want tabs-container to scroll ONLY the tabs, and keep button visible?
-       User said: "Button immediately right of tabs".
-       If flex:1, it pushes button to far right.
-       If flex: initial, it grows with content.
-       Let's use flex-grow: 0 and overflow: auto.
-    */
-    overflow-x: auto;
-    max-width: calc(100% - 40px);
-    /* Leave space for button */
-    -webkit-app-region: no-drag;
-}
-
-/* Hide scrollbar for Chrome/Safari/Blink */
-#tabs-list::-webkit-scrollbar {
-    display: none;
+    flex: 0 1 auto;
+    /* Allow shrinking if needed, but don't grow indefinitely */
+    overflow: hidden;
+    min-width: 0;
+    margin-top: 8px;
+    margin-left: 10px;
+    max-width: 100%;
+    /* Ensure it doesn't overflow parent */
 }
 
 .tab {
@@ -48,7 +38,10 @@ body {
     align-items: center;
     width: 200px;
     max-width: 240px;
+    min-width: 0;
+    flex-shrink: 1;
     height: 32px;
+    -webkit-app-region: no-drag;
     background-color: #35363a;
     color: #9aa0a6;
     border-radius: 8px 8px 0 0;
@@ -110,10 +103,46 @@ body {
     align-items: center;
     justify-content: center;
     margin-left: 5px;
+    margin-top: 8px;
+    flex-shrink: 0;
+    /* Prevent button from shrinking/disappearing */
 }
 
 #new-tab-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Window Controls */
+#window-controls {
+    display: flex;
+    -webkit-app-region: no-drag;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+#window-controls button {
+    width: 46px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: #9aa0a6;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+#window-controls button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#close-btn:hover {
+    background-color: #e81123 !important;
+    color: white;
 }
 
 /* Browser kontrolleri */
@@ -168,7 +197,7 @@ body {
     flex-grow: 1;
     position: relative;
     overflow: hidden;
-    background-color: #005eff;
+    background-color: #202124;
 }
 
 /* BROWSER KONTROL ÇUBUĞU */
