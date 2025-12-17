@@ -1,3 +1,28 @@
+:root {
+    /* Color Palette */
+    --bg-base: #202225;
+    /* Deep Grey Base */
+    --bg-dark: #18191c;
+    /* Darker for backgrounds */
+    --bg-glass: rgba(47, 49, 54, 0.6);
+    /* Glassy surface */
+    --bg-glass-heavy: rgba(32, 34, 37, 0.9);
+
+    --accent: #14aab8;
+    /* Cyan Accent */
+    --accent-hover: #118e9a;
+    --accent-glow: rgba(20, 170, 184, 0.3);
+
+    --text-primary: #ffffff;
+    --text-secondary: #b9bbbe;
+
+    --radius-l: 12px;
+    --radius-m: 8px;
+    --radius-s: 4px;
+
+    --font-main: 'Fredoka', sans-serif;
+}
+
 body {
     display: flex;
     flex-direction: column;
@@ -5,32 +30,38 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #202124;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-main);
 }
 
+/* --- TABS BÖLÜMÜ --- */
 #tabs-container {
     display: flex;
-    align-items: flex-start;
-    background-color: #202124;
-    padding: 0 140px 0 0;
-    /* Add right padding to reserve space for window controls */
-    height: 40px;
+    align-items: flex-end;
+    /* Tabs sit on the bottom of this bar */
+    background-color: var(--bg-dark);
+    /* Solid background behind glass if needed, or transparent */
+    padding: 8px 140px 0 10px;
+    /* Top padding for breathing room */
+    height: 48px;
+    /* Slightly taller for modern look */
     -webkit-app-region: drag;
     position: relative;
     box-sizing: border-box;
-    /* Ensure padding is included in width */
+    z-index: 200;
 }
 
 #tabs-list {
     display: flex;
     flex: 0 1 auto;
-    /* Allow shrinking if needed, but don't grow indefinitely */
     overflow: hidden;
     min-width: 0;
-    margin-top: 8px;
-    margin-left: 10px;
+    height: 100%;
+    align-items: flex-end;
+    /* Tabs start from bottom */
+    margin: 0;
     max-width: 100%;
-    /* Ensure it doesn't overflow parent */
 }
 
 .tab {
@@ -38,31 +69,58 @@ body {
     align-items: center;
     width: 200px;
     max-width: 240px;
-    min-width: 0;
+    min-width: 60px;
+    /* Allow shrinking */
     flex-shrink: 1;
-    height: 32px;
+    height: 36px;
+    /* Taller tabs */
     -webkit-app-region: no-drag;
-    background-color: #35363a;
-    color: #9aa0a6;
-    border-radius: 8px 8px 0 0;
-    margin-right: 2px;
-    padding: 0 10px;
-    font-size: 12px;
+
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-l) var(--radius-l) 0 0;
+    margin-right: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     user-select: none;
     position: relative;
-    transition: background-color 0.1s;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Subtle border for separation */
+    border: 1px solid transparent;
 }
 
 .tab:hover {
-    background-color: #45464a;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
 }
 
 .tab.active {
-    background-color: #3c4043;
-    /* Matches browser controls bg */
-    color: #e8eaed;
+    background-color: var(--bg-base);
+    /* Connects with browser controls */
+    color: var(--accent);
     z-index: 10;
+    height: 40px;
+    /* Active tab pops up slightly */
+    border-bottom: none;
+
+    /* Glow Effect */
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.tab.active::before {
+    /* Accent Line Top */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 3px;
+    background-color: var(--accent);
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 8px var(--accent-glow);
 }
 
 .tab-title {
@@ -73,53 +131,65 @@ body {
 }
 
 .tab-close {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     margin-left: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 12px;
+    opacity: 0;
+    /* Hidden by default for cleaner look */
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close {
     opacity: 0.7;
 }
 
 .tab-close:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    opacity: 1;
+    background-color: rgba(235, 87, 87, 0.2);
+    color: #ff5555;
+    opacity: 1 !important;
 }
 
 #new-tab-btn {
     -webkit-app-region: no-drag;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     background: transparent;
     border: none;
-    color: #9aa0a6;
-    font-size: 20px;
+    color: var(--accent);
+    font-size: 24px;
     cursor: pointer;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 5px;
-    margin-top: 8px;
+    margin-left: 6px;
+    margin-bottom: 4px;
+    /* Align with tabs */
     flex-shrink: 0;
-    /* Prevent button from shrinking/disappearing */
+    transition: transform 0.2s, background 0.2s;
 }
 
 #new-tab-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: rotate(90deg);
 }
 
-/* Window Controls */
+/* --- WINDOW CONTROLS --- */
 #window-controls {
     display: flex;
     -webkit-app-region: no-drag;
     height: 100%;
+    /* Match header height roughly */
     position: absolute;
     top: 0;
     right: 0;
+    z-index: 300;
 }
 
 #window-controls button {
@@ -127,132 +197,114 @@ body {
     height: 100%;
     background: transparent;
     border: none;
-    color: #9aa0a6;
+    color: var(--text-secondary);
     font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
 }
 
 #window-controls button:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
 }
 
 #close-btn:hover {
     background-color: #e81123 !important;
-    color: white;
+    color: white !important;
 }
 
-/* Browser kontrolleri */
-#browser-controls {
-    flex-shrink: 0;
-    display: flex;
-    /* Kontrolleri yatay hizalamak için */
-    align-items: center;
-    /* Dikeyde ortala */
-    padding: 5px;
-    background-color: #333;
-    /* Hafif bir arka plan */
-    border-bottom: 1px solid #444;
-}
-
-#browser-controls button {
-    background-color: #555;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    margin: 0 3px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1.1em;
-    transition: background-color 0.2s;
-}
-
-#browser-controls button:hover {
-    background-color: #777;
-}
-
-#address-bar {
-    flex-grow: 1;
-    /* Adres çubuğunun genişlemesini sağlar */
-    margin: 0 10px;
-    padding: 8px 15px;
-    border: 1px solid #666;
-    border-radius: 20px;
-    background-color: #444;
-    color: white;
-    font-size: 1em;
-}
-
-#address-bar:focus {
-    outline: none;
-    border-color: #007bff;
-}
-
-
-/* Webview'in yerleştirileceği alan */
-#webview-container-placeholder {
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden;
-    background-color: #202124;
-}
-
-/* BROWSER KONTROL ÇUBUĞU */
+/* --- BROWSER CONTROLS (Navigation & Address) --- */
 #browser-controls {
     display: flex;
     align-items: center;
-    padding: 5px 10px;
-    background-color: #282c34;
-    border-bottom: 1px solid #3c4043;
-    height: 40px;
+    padding: 8px 16px;
+    /* More padding */
+    background-color: var(--bg-base);
+    border-bottom: 1px solid #111;
+    height: 54px;
     box-sizing: border-box;
     -webkit-app-region: drag;
     position: relative;
     z-index: 100;
+
+    /* Glassmorphism Hint - if we make bg transparent later */
+    /* backdrop-filter: blur(20px); */
 }
 
 #browser-controls button {
     -webkit-app-region: no-drag;
-    background-color: #3c4043;
-    color: white;
+    background: transparent;
+    color: var(--text-primary);
     border: none;
-    padding: 6px 12px;
-    margin: 0 2px;
-    border-radius: 4px;
+    width: 36px;
+    height: 36px;
+    margin-right: 4px;
+    border-radius: var(--radius-m);
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
+    font-size: 16px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #browser-controls button:hover {
-    background-color: #5f6368;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    transform: translateY(-1px);
 }
 
 #browser-controls button:active {
-    background-color: #8ab4f8;
+    background-color: rgba(20, 170, 184, 0.2);
+    transform: translateY(0);
 }
 
 #address-bar {
     -webkit-app-region: no-drag;
     flex-grow: 1;
-    margin: 0 10px;
-    padding: 6px 12px;
-    border: 1px solid #5f6368;
-    border-radius: 20px;
-    background-color: #3c4043;
-    color: white;
+    margin: 0 16px;
+    padding: 0 20px;
+    height: 36px;
+
+    border: 1px solid transparent;
+    border-radius: 18px;
+    /* Pill shape */
+
+    background-color: rgba(0, 0, 0, 0.2);
+    /* Darker pill on background */
+    color: var(--text-primary);
+    font-family: var(--font-main);
     font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+
     outline: none;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#address-bar:hover {
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 #address-bar:focus {
-    border-color: #8ab4f8;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 #address-bar::placeholder {
-    color: #9aa0a6;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* --- WEBVIEW CONTAINER --- */
+#webview-container-placeholder {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--bg-base);
+    /* Match body mainly */
 }

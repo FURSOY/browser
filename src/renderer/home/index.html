@@ -5,54 +5,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Color Palette */
+            --bg-base: #202225;
+            --bg-dark: #18191c;
+            --accent: #14aab8;
+            --accent-glow: rgba(20, 170, 184, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #b9bbbe;
+            --font-main: 'Fredoka', sans-serif;
+        }
+
         body {
-            background-color: #282c34;
-            color: white;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
-            align-items: center;
             height: 100vh;
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: var(--font-main);
         }
 
         .search-container {
-            text-align: center;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top Section for Logo and Title */
+        .top-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            /* Occupy top half */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            /* Align near the center line */
+            align-items: center;
+            padding-bottom: 80px;
+            /* Space between title and input */
+            box-sizing: border-box;
+            z-index: 10;
         }
 
         h1 {
-            font-size: 4rem;
-            font-weight: 300;
+            font-size: 6rem;
+            font-weight: 600;
+            margin: 0;
+            /* Remove default margins */
+            color: var(--text-primary);
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        /* Logo Animation */
+        #app-logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(20, 170, 184, 0.2));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Glassmorphism Search Box - Centered */
+        #search-form {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 600px;
+            z-index: 20;
+            padding: 0 20px;
+            /* Safety padding for mobile/small screens */
+            box-sizing: border-box;
         }
 
         #search-input {
-            width: 500px;
-            padding: 10px 20px;
+            width: 100%;
+            padding: 16px 24px;
             font-size: 1.2rem;
-            border-radius: 24px;
-            border: 1px solid #5f6368;
-            background-color: #3c4043;
-            color: white;
-            margin-top: 20px;
+            font-family: var(--font-main);
+            border-radius: 50px;
+            /* Pill shape */
+            border: 2px solid transparent;
+
+            background-color: rgba(0, 0, 0, 0.25);
+            color: var(--text-primary);
+
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+
+        #search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 300;
+        }
+
+        #search-input:hover {
+            background-color: rgba(0, 0, 0, 0.35);
+            transform: translateY(-2px);
         }
 
         #search-input:focus {
-            outline: none;
-            border-color: #8ab4f8;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 5px var(--accent-glow), 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
         }
 
-        /* Versiyon bilgisinin search.html içinde sol altta görünmesi için */
+        /* Logo Animation */
+        #app-logo {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 0 20px rgba(20, 170, 184, 0.2));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* --- Footer Info --- */
         #version-info {
             position: absolute;
-            bottom: 10px;
-            /* Altta */
-            left: 10px;
-            /* Solda */
-            color: #a0a0a0;
-            font-size: 12px;
-            font-family: sans-serif;
-            z-index: 1000;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+            font-weight: 400;
+            pointer-events: none;
         }
 
         /* İndirme İlerlemesi / Yeniden Başlatma Butonu - search.html içinde sağ altta */
@@ -134,14 +253,16 @@
 
 <body>
     <div class="search-container">
-        <h1>FURSOY</h1>
+        <div class="top-content">
+            <img src="../../../assets/icon.ico" alt="Logo" id="app-logo">
+            <h1>FURSOY</h1>
+        </div>
         <form id="search-form">
             <input type="text" id="search-input" placeholder="Search Google..." autofocus>
         </form>
 
         <div id="version-info">Versiyon: Yükleniyor...</div>
 
-        <!-- İndirme ilerlemesi ve yeniden başlatma butonu aynı alanda yönetilecek -->
         <div id="download-status-area">
             <div id="download-progress-bar"></div>
             <span id="download-progress-text"></span>

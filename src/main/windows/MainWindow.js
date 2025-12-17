@@ -61,6 +61,14 @@ class MainWindow {
             }
         });
 
+        this.window.on('maximize', () => {
+            this.window.webContents.send('window-is-maximized');
+        });
+
+        this.window.on('unmaximize', () => {
+            this.window.webContents.send('window-is-restored');
+        });
+
         this.handleMessages();
     }
 

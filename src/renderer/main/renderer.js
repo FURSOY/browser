@@ -175,6 +175,22 @@ if (closeBtn) {
     });
 }
 
+// --- Window State Icons ---
+const iconMaximize = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H6V6h12v12z"/></svg>`;
+const iconRestore = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8h1v11h11v1H4V8zm4-4h12v12H8V4zm2 2v8h8V6h-8z"/></svg>`;
+
+if (window.bridge.onWindowMaximized) {
+    window.bridge.onWindowMaximized(() => {
+        if (maxBtn) maxBtn.innerHTML = iconRestore;
+    });
+}
+
+if (window.bridge.onWindowRestored) {
+    window.bridge.onWindowRestored(() => {
+        if (maxBtn) maxBtn.innerHTML = iconMaximize;
+    });
+}
+
 // --- Klavye Kısayolu: F12 ile DevTools ---
 document.addEventListener('keydown', (event) => {
     if (event.key === 'F12') {
