@@ -21,11 +21,11 @@
             padding: 0;
             font-family: 'Fredoka', sans-serif;
             background-color: var(--bg-dark);
-            /* Arka plan rengi */
             color: var(--text-primary);
             overflow: hidden;
             border-left: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
+            border-radius: 8px;
             box-sizing: border-box;
             height: 100vh;
             display: flex;
@@ -41,6 +41,8 @@
             align-items: center;
             font-size: 14px;
             font-weight: 500;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
         }
 
         #clear-btn {
@@ -84,6 +86,10 @@
 
         .item:hover {
             background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .item:last-child {
+            border-bottom-left-radius: 12px;
         }
 
         .icon {
