@@ -8,6 +8,7 @@ class MainWindow {
     window;
     tabs = new Map(); // id -> { view, id }
     activeTabId = null;
+    isHtmlFullScreen = false;
     _onLoadCallback;
 
     position = {
@@ -55,9 +56,16 @@ class MainWindow {
         });
 
         // Pencere boyutu değiştiğinde Aktif BrowserView'i güncelle
+        // Pencere boyutu değiştiğinde Aktif BrowserView'i güncelle
         this.window.on('resize', () => {
             if (this.activeTabId) {
-                this.updateViewBounds(this.tabs.get(this.activeTabId).view);
+                const view = this.tabs.get(this.activeTabId).view;
+                if (this.isHtmlFullScreen) {
+                    const { width, height } = this.window.getContentBounds();
+                    view.setBounds({ x: 0, y: 0, width, height });
+                } else {
+                    this.updateViewBounds(view);
+                }
             }
         });
 
@@ -164,6 +172,30 @@ class MainWindow {
     }
 
     attachViewListeners(view, id) {
+        // 1. Handle "Open in New Tab" (target="_blank" links)
+        view.webContents.setWindowOpenHandler((details) => {
+            this.createTab(details.url);
+            return { action: 'deny' };
+        });
+
+        // 2. Handle HTML Fullscreen (e.g. YouTube videos)
+        view.webContents.on('enter-html-full-screen', () => {
+            this.isHtmlFullScreen = true;
+            this.window.webContents.send('fullscreen-toggle', true);
+
+            // Adding a small delay to ensure UI toggle and layout shift completes
+            setTimeout(() => {
+                const { width, height } = this.window.getContentBounds();
+                view.setBounds({ x: 0, y: 0, width, height });
+            }, 100);
+        });
+
+        view.webContents.on('leave-html-full-screen', () => {
+            this.isHtmlFullScreen = false;
+            this.window.webContents.send('fullscreen-toggle', false);
+            this.updateViewBounds(view);
+        });
+
         view.webContents.on('did-navigate', (event, url) => {
             if (this.activeTabId === id) {
                 this.updateAddressBar(url);

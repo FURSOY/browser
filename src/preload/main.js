@@ -35,6 +35,7 @@ let bridge = {
     close: () => ipcRenderer.send('window-close'),
     onWindowMaximized: (callback) => ipcRenderer.on('window-is-maximized', callback),
     onWindowRestored: (callback) => ipcRenderer.on('window-is-restored', callback),
+    onFullscreenToggle: (callback) => ipcRenderer.on('fullscreen-toggle', callback),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

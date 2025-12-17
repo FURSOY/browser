@@ -191,6 +191,18 @@ if (window.bridge.onWindowRestored) {
     });
 }
 
+// --- Fullscreen Toggle Logic ---
+if (window.bridge.onFullscreenToggle) {
+    window.bridge.onFullscreenToggle((event, isFullscreen) => {
+        const tabsContainer = document.getElementById('tabs-container');
+        const browserControls = document.getElementById('browser-controls');
+        const displayStyle = isFullscreen ? 'none' : 'flex';
+
+        if (tabsContainer) tabsContainer.style.display = displayStyle;
+        if (browserControls) browserControls.style.display = displayStyle;
+    });
+}
+
 // --- Klavye Kısayolu: F12 ile DevTools ---
 document.addEventListener('keydown', (event) => {
     if (event.key === 'F12') {
