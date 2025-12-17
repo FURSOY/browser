@@ -66,6 +66,32 @@
             </svg>
         </button>
         <input type="text" id="address-bar" placeholder="Search Google or type a URL">
+        <button id="downloads-btn" title="Downloads">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+            </svg>
+        </button>
+
+        <!-- İndirme Popup'ı (Başlangıçta gizli) -->
+        <div id="downloads-popup">
+            <div id="downloads-header">
+                <span>İndirilenler</span>
+                <span id="downloads-clear">Temizle</span>
+            </div>
+            <div id="downloads-list">
+                <!-- İndirme öğeleri buraya dinamik olarak eklenecek -->
+                <!-- Örnek Öğe:
+                <div class="download-item">
+                    <div class="download-icon">📄</div>
+                    <div class="download-info">
+                        <div class="download-name">dosya_adı.zip</div>
+                        <div class="download-progress-bar"><div class="progress" style="width: 50%"></div></div>
+                        <div class="download-meta">5.2MB / 10MB - 1.2MB/s</div>
+                    </div>
+                </div>
+                -->
+            </div>
+        </div>
     </div>
 
     <!-- BrowserView'in yerleştirileceği boş yer tutucu -->

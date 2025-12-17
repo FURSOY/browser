@@ -36,6 +36,18 @@ let bridge = {
     onWindowMaximized: (callback) => ipcRenderer.on('window-is-maximized', callback),
     onWindowRestored: (callback) => ipcRenderer.on('window-is-restored', callback),
     onFullscreenToggle: (callback) => ipcRenderer.on('fullscreen-toggle', callback),
+
+    // Download Events
+    onDownloadStarted: (callback) => ipcRenderer.on('download-started', callback),
+    onDownloadProgress: (callback) => ipcRenderer.on('download-progress', callback),
+    onDownloadCompleted: (callback) => ipcRenderer.on('download-completed', callback),
+
+    // IPC Send
+    setDownloadsMenuState: (isOpen) => ipcRenderer.send('set-downloads-menu', isOpen),
+    openDownload: (id) => ipcRenderer.send('open-download', id),
+
+    // Downloads List Init
+    onSetDownloads: (callback) => ipcRenderer.on('set-downloads', callback),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

@@ -211,3 +211,185 @@ document.addEventListener('keydown', (event) => {
         window.bridge.toggleDevTools();
     }
 });
+
+// --- Download Manager Logic ---
+const downloadsBtn = document.getElementById('downloads-btn');
+const downloadsPopup = document.getElementById('downloads-popup');
+const downloadsList = document.getElementById('downloads-list');
+const downloadsClear = document.getElementById('downloads-clear');
+
+if (downloadsBtn && downloadsPopup) {
+    // Toggle Popup
+    downloadsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isActive = downloadsPopup.classList.toggle('active');
+        window.bridge.setDownloadsMenuState(isActive);
+    });
+
+    // Close on Click Outside
+    document.addEventListener('click', (e) => {
+        if (!downloadsPopup.contains(e.target) && !downloadsBtn.contains(e.target)) {
+            if (downloadsPopup.classList.contains('active')) {
+                downloadsPopup.classList.remove('active');
+                window.bridge.setDownloadsMenuState(false);
+            }
+        }
+    });
+
+    // Clear List
+    if (downloadsClear) {
+        downloadsClear.addEventListener('click', () => {
+            downloadsList.innerHTML = '';
+        });
+    }
+}
+
+// Helper to create item HTML
+function createDownloadItemHTML(id, filename, progress = 0, status = 'Başlıyor...', speed = '-- MB/s', isCompleted = false) {
+    const item = document.createElement('div');
+    item.className = 'download-item';
+    item.id = `download-${id}`;
+
+    let metaContent = `
+        <span class="status">${status}</span>
+        <span class="speed">${speed}</span>
+    `;
+
+    let progressContent = `<div class="download-progress-bar"><div class="progress" style="width: ${progress}%; ${isCompleted ? 'background-color: #2ba060;' : ''}"></div></div>`;
+
+    if (isCompleted) {
+        progressContent = ''; // Remove progress bar on complete
+        metaContent = `<a href="#" class="open-file-link" data-id="${id}">Dosyayı Aç</a>`;
+    }
+
+    item.innerHTML = `
+        <div class="download-icon">⬇</div>
+        <div class="download-info">
+            <div class="download-name" title="${filename}">${filename}</div>
+            ${progressContent}
+            <div class="download-meta">
+                ${metaContent}
+            </div>
+        </div>
+    `;
+
+    // Attach click listener for open file
+    const link = item.querySelector('.open-file-link');
+    if (link) {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.bridge.openDownload(id);
+        });
+    }
+
+    return item;
+}
+
+// IPC: Set Saved Downloads
+if (window.bridge.onSetDownloads) {
+    window.bridge.onSetDownloads((event, downloads) => {
+        if (!downloadsList) return;
+        downloadsList.innerHTML = '';
+        downloads.forEach(d => {
+            const isCompleted = d.status === 'completed';
+            const statusText = isCompleted ? 'Tamamlandı' : 'Başarısız/Yarım';
+            const item = createDownloadItemHTML(d.id, d.filename, 100, statusText, '', isCompleted);
+            downloadsList.appendChild(item);
+        });
+    });
+}
+
+// IPC: Download Started
+if (window.bridge.onDownloadStarted) {
+    window.bridge.onDownloadStarted((event, { id, filename }) => {
+        if (!downloadsPopup || !downloadsList) return;
+
+        // Auto-open popup
+        downloadsPopup.classList.add('active');
+        window.bridge.setDownloadsMenuState(true);
+
+        const item = createDownloadItemHTML(id, filename);
+        downloadsList.prepend(item);
+    });
+}
+
+// IPC: Download Progress
+if (window.bridge.onDownloadProgress) {
+    window.bridge.onDownloadProgress((event, { id, progress, speed, downloaded, total }) => {
+        const item = document.getElementById(`download-${id}`);
+        if (!item) return;
+
+        const progressBar = item.querySelector('.progress');
+        const statusSpan = item.querySelector('.status');
+        const speedSpan = item.querySelector('.speed');
+
+        if (progressBar) progressBar.style.width = `${progress}%`;
+
+        // Format bytes
+        const formatBytes = (bytes) => {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        };
+
+        if (statusSpan) statusSpan.textContent = `${formatBytes(downloaded)} / ${formatBytes(total)}`;
+        if (speedSpan) speedSpan.textContent = speed;
+    });
+}
+
+// IPC: Download Completed
+if (window.bridge.onDownloadCompleted) {
+    window.bridge.onDownloadCompleted((event, { id, filename }) => {
+        const item = document.getElementById(`download-${id}`);
+        if (!item) return;
+
+        // Re-render item as completed
+        const newItem = createDownloadItemHTML(id, filename, 100, 'Tamamlandı', '', true);
+        downloadsList.replaceChild(newItem, item);
+    });
+}
+
+// IPC: Download Progress
+if (window.bridge.onDownloadProgress) {
+    window.bridge.onDownloadProgress((event, { id, progress, speed, downloaded, total }) => {
+        const item = document.getElementById(`download-${id}`);
+        if (!item) return;
+
+        const progressBar = item.querySelector('.progress');
+        const statusSpan = item.querySelector('.status');
+        const speedSpan = item.querySelector('.speed');
+
+        if (progressBar) progressBar.style.width = `${progress}%`;
+
+        // Format bytes
+        const formatBytes = (bytes) => {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        };
+
+        if (statusSpan) statusSpan.textContent = `${formatBytes(downloaded)} / ${formatBytes(total)}`;
+        if (speedSpan) speedSpan.textContent = speed; // Pre-formatted or format here
+    });
+}
+
+// IPC: Download Completed
+if (window.bridge.onDownloadCompleted) {
+    window.bridge.onDownloadCompleted((event, { id, filename }) => {
+        const item = document.getElementById(`download-${id}`);
+        if (!item) return;
+
+        const progressBar = item.querySelector('.progress');
+        const statusSpan = item.querySelector('.status');
+
+        if (progressBar) {
+            progressBar.style.width = '100%';
+            progressBar.style.backgroundColor = '#2ba060'; // Green
+        }
+        if (statusSpan) statusSpan.textContent = 'Tamamlandı';
+    });
+}
