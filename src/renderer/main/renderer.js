@@ -33,6 +33,14 @@ function renderTabs() {
             window.bridge.closeTab(tab.id);
         };
 
+        const iconEl = document.createElement('img');
+        iconEl.className = 'tab-icon';
+        const defaultIcon = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23b9bbbe"%3E%3Cpath d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/%3E%3C/svg%3E';
+        iconEl.src = tab.favicon || defaultIcon;
+        iconEl.onerror = () => { iconEl.src = defaultIcon; };
+
+        // Append order: Icon -> Title -> Close
+        tabEl.appendChild(iconEl);
         tabEl.appendChild(titleEl);
         tabEl.appendChild(closeEl);
 
@@ -72,6 +80,14 @@ window.bridge.onTabUpdated((event, { id, title }) => {
 window.bridge.onActiveTabChanged((event, id) => {
     activeTabId = id;
     renderTabs();
+});
+
+window.bridge.onTabFaviconUpdated((event, { id, url }) => {
+    const tab = tabs.find(t => t.id === id);
+    if (tab) {
+        tab.favicon = url;
+        renderTabs();
+    }
 });
 
 
@@ -144,6 +160,41 @@ window.bridge.onURLUpdate((event, url) => {
 window.bridge.onUpdateProgress((event, percent) => {
     // console.log(`Manager received progress: ${percent}%`);
 });
+
+const loadingBar = document.getElementById('loading-bar');
+let loadingInterval;
+
+if (window.bridge.onLoadingStart) {
+    window.bridge.onLoadingStart(() => {
+        if (loadingBar) {
+            loadingBar.classList.add('loading');
+            loadingBar.style.width = '20%';
+            // Simulate slow progress
+            clearInterval(loadingInterval);
+            loadingInterval = setInterval(() => {
+                const currentWidth = parseFloat(loadingBar.style.width) || 0;
+                if (currentWidth < 90) {
+                    loadingBar.style.width = (currentWidth + (Math.random() * 5)) + '%';
+                }
+            }, 500);
+        }
+    });
+}
+
+if (window.bridge.onLoadingStop) {
+    window.bridge.onLoadingStop(() => {
+        if (loadingBar) {
+            clearInterval(loadingInterval);
+            loadingBar.style.width = '100%';
+            setTimeout(() => {
+                loadingBar.classList.remove('loading');
+                setTimeout(() => {
+                    loadingBar.style.width = '0%';
+                }, 200);
+            }, 300);
+        }
+    });
+}
 
 // --- Version Info Logic ---
 window.bridge.onSetVersion((event, version) => {

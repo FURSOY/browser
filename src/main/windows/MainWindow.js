@@ -409,7 +409,16 @@ class MainWindow {
         this.updateViewBounds(nv);
         this.window.webContents.send('tab-active-changed', id);
         // ... (address bar update)
-        if (nv && !nv.webContents.isDestroyed()) this.updateAddressBar(nv.webContents.getURL());
+        if (nv && !nv.webContents.isDestroyed()) {
+            this.updateAddressBar(nv.webContents.getURL());
+
+            // Sync loading state
+            if (nv.webContents.isLoading()) {
+                this.window.webContents.send('loading-start');
+            } else {
+                this.window.webContents.send('loading-stop');
+            }
+        }
 
         // Ensure downloads is on top if open
         if (this.isDownloadsPopupOpen) {
@@ -504,6 +513,26 @@ class MainWindow {
                 if (path.normalize(currentPath) === path.normalize(searchPath)) {
                     this.sendVersion(app.getVersion(), view);
                 }
+            }
+        });
+
+        // Loading Events
+        view.webContents.on('did-start-loading', () => {
+            if (this.activeTabId === id) {
+                this.window.webContents.send('loading-start');
+            }
+        });
+
+        view.webContents.on('did-stop-loading', () => {
+            if (this.activeTabId === id) {
+                this.window.webContents.send('loading-stop');
+            }
+        });
+
+        // Favicon
+        view.webContents.on('page-favicon-updated', (event, favicons) => {
+            if (favicons && favicons.length > 0) {
+                this.window.webContents.send('tab-favicon-updated', { id, url: favicons[0] });
             }
         });
     }

@@ -123,6 +123,15 @@ body {
     box-shadow: 0 2px 8px var(--accent-glow);
 }
 
+.tab-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    border-radius: 2px;
+    object-fit: contain;
+    /* Fallback background if src fails? */
+}
+
 .tab-title {
     flex: 1;
     white-space: nowrap;
@@ -465,4 +474,25 @@ body {
 
 .open-file-link:hover {
     text-decoration: underline;
+}
+
+/* --- LOADING BAR --- */
+#loading-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    /* Slightly thicker to be visible but still thin */
+    background: var(--accent);
+    z-index: 9999;
+    width: 0%;
+    opacity: 0;
+    transition: width 0.3s ease-out, opacity 0.2s;
+    pointer-events: none;
+    box-shadow: 0 -1px 4px var(--accent-glow);
+    /* Glow upwards */
+}
+
+#loading-bar.loading {
+    opacity: 1;
 }

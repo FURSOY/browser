@@ -48,6 +48,13 @@ let bridge = {
 
     // Downloads List Init
     onSetDownloads: (callback) => ipcRenderer.on('set-downloads', callback),
+
+    // Loading Events
+    onLoadingStart: (callback) => ipcRenderer.on('loading-start', callback),
+    onLoadingStop: (callback) => ipcRenderer.on('loading-stop', callback),
+
+    // Favicon
+    onTabFaviconUpdated: (callback) => ipcRenderer.on('tab-favicon-updated', callback),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);
