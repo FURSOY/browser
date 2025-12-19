@@ -24,6 +24,8 @@ class MainWindow {
         this.window = new BrowserWindow({
             width: this.position.width,
             height: this.position.height,
+            minWidth: 800,
+            minHeight: 600,
             title: "FURSOY Browser",
             icon: path.join(__dirname, "../../../assets/icon.ico"),
             show: false,
@@ -33,7 +35,10 @@ class MainWindow {
             autoHideMenuBar: true,
             webPreferences: {
                 contextIsolation: true,
-                preload: path.join(__dirname, "../../preload/main.js"), // Shared preload is fine
+                preload: path.join(__dirname, "../../preload/main.js"),
+                // Performance optimizations
+                backgroundThrottling: false,
+                offscreen: false,
             },
         });
 
@@ -42,14 +47,13 @@ class MainWindow {
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
-                baseUserAppDataPath: app.getPath('userData'), // Sanity check
+                baseUserAppDataPath: app.getPath('userData'),
                 preload: path.join(__dirname, '../../preload/downloads.js')
             }
         });
         this.downloadsView.webContents.loadURL(`file://${path.join(__dirname, '../../renderer/downloads/index.html')}`);
         this.downloadsView.setBackgroundColor('#202124');
 
-        // ... existing constructor ...
         const mainPagePath = path.join(__dirname, '../../renderer/main/index.html');
         this.window.loadFile(mainPagePath);
 
@@ -60,39 +64,38 @@ class MainWindow {
             if (this._onLoadCallback) this._onLoadCallback();
         });
 
-        // ... existing listeners ...
         this.window.once("ready-to-show", () => {
             this.window.show();
             if (this.position.maximized) this.window.maximize();
         });
 
-        // Close downloads if clicks happen on the main chrome (tabs, url bar)
         this.window.webContents.on('focus', () => {
             if (this.isDownloadsPopupOpen) this.toggleDownloadsView(false);
         });
 
         this.window.on('resize', () => {
-            if (this.activeTabId) {
+            if (this.activeTabId && this.tabs.has(this.activeTabId)) {
                 const view = this.tabs.get(this.activeTabId).view;
-                if (this.isHtmlFullScreen) {
-                    const { width, height } = this.window.getContentBounds();
-                    view.setBounds({ x: 0, y: 0, width, height });
-                } else {
-                    this.updateViewBounds(view);
-                }
+                this.updateViewBounds(view);
             }
-            // Reposition downloads if open
             if (this.isDownloadsPopupOpen) {
                 this.updateDownloadsViewBounds();
             }
         });
 
-        // ... (max/unmax listeners)
         this.window.on('maximize', () => {
+            if (this.activeTabId && this.tabs.has(this.activeTabId)) {
+                const view = this.tabs.get(this.activeTabId).view;
+                this.updateViewBounds(view);
+            }
             this.window.webContents.send('window-is-maximized');
         });
 
         this.window.on('unmaximize', () => {
+            if (this.activeTabId && this.tabs.has(this.activeTabId)) {
+                const view = this.tabs.get(this.activeTabId).view;
+                this.updateViewBounds(view);
+            }
             this.window.webContents.send('window-is-restored');
         });
 
@@ -375,18 +378,23 @@ class MainWindow {
                 nodeIntegration: false,
                 webSecurity: true,
                 preload: path.join(__dirname, "../../preload/search.js"),
+                backgroundThrottling: false,
             }
         });
         view.setBackgroundColor('#202124');
+        // view.setAutoResize({ width: true, height: true }); // Manual resizing used instead for header offset precision
+
         const id = Date.now().toString();
         this.tabs.set(id, { view, id });
 
+        this.window.addBrowserView(view);
+        // Start hidden
+        view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+
         view.webContents.on('focus', () => {
-            // If user clicks a tab, close downloads
             if (this.isDownloadsPopupOpen) this.toggleDownloadsView(false);
         });
 
-        // ... existing loading logic ...
         const finalUrl = urlToLoad || `file://${path.join(__dirname, '../../renderer/home/index.html')}`;
         view.webContents.loadURL(finalUrl);
         this.attachViewListeners(view, id);
@@ -394,25 +402,30 @@ class MainWindow {
         this.switchTab(id);
     }
 
-    // ... SwitchTab needs to check overlap? 
     switchTab(id) {
-        // ... standard logic ...
         if (!this.tabs.has(id)) return;
+
         const prevId = this.activeTabId;
-        if (prevId) {
+        if (prevId && this.tabs.has(prevId)) {
             const pv = this.tabs.get(prevId).view;
-            if (pv && !pv.webContents.isDestroyed()) this.window.removeBrowserView(pv); // Standard remove
+            if (pv && !pv.webContents.isDestroyed()) {
+                // Hide instead of remove
+                pv.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+            }
         }
+
         this.activeTabId = id;
         const nv = this.tabs.get(id).view;
-        this.window.addBrowserView(nv); // Use add instead of set to stack
+
+        // Ensure it's active and correctly placed
         this.updateViewBounds(nv);
+        this.window.setTopBrowserView(nv); // Ensure it's on top of other tabs
+
         this.window.webContents.send('tab-active-changed', id);
-        // ... (address bar update)
+
         if (nv && !nv.webContents.isDestroyed()) {
             this.updateAddressBar(nv.webContents.getURL());
 
-            // Sync loading state
             if (nv.webContents.isLoading()) {
                 this.window.webContents.send('loading-start');
             } else {
@@ -420,7 +433,6 @@ class MainWindow {
             }
         }
 
-        // Ensure downloads is on top if open
         if (this.isDownloadsPopupOpen) {
             this.window.setTopBrowserView(this.downloadsView);
         }
@@ -552,33 +564,21 @@ class MainWindow {
         this.window.webContents.send('update-address-bar', currentUrl);
     }
 
-    async updateViewBounds(view) {
-        if (!view || !this.window || !this.window.webContents || this.window.isDestroyed()) {
-            return;
-        }
+    updateViewBounds(view) {
+        if (!view || !this.window || this.window.isDestroyed()) return;
 
-        const bounds = await this.window.webContents.executeJavaScript(`
-                (function() {
-                    const placeholder = document.getElementById('webview-container-placeholder');
-                    if (placeholder) {
-                        const rect = placeholder.getBoundingClientRect();
-                        return {
-                            x: rect.left,
-                            y: rect.top,
-                            width: rect.width,
-                            height: rect.height
-                        };
-                    }
-                    return null;
-                })();
-            `);
+        const { width, height } = this.window.getContentBounds();
 
-        if (bounds) {
+        if (this.isHtmlFullScreen) {
+            view.setBounds({ x: 0, y: 0, width, height });
+        } else {
+            // Fixed header calculation: tabs (48) + controls (54) = 102
+            const headerHeight = 102;
             view.setBounds({
-                x: Math.floor(bounds.x),
-                y: Math.floor(bounds.y),
-                width: Math.floor(bounds.width),
-                height: Math.floor(bounds.height)
+                x: 0,
+                y: headerHeight,
+                width: width,
+                height: Math.max(0, height - headerHeight)
             });
         }
     }

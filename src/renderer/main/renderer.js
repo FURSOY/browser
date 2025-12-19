@@ -12,49 +12,82 @@ if (newTabBtn) {
     });
 }
 
+const tabElements = new Map(); // id -> element
+
 function renderTabs() {
     if (!tabsList) return;
-    tabsList.innerHTML = '';
+
+    // Remove elements for tabs that no longer exist
+    const tabIds = new Set(tabs.map(t => t.id));
+    for (const [id, el] of tabElements.entries()) {
+        if (!tabIds.has(id)) {
+            el.remove();
+            tabElements.delete(id);
+        }
+    }
 
     tabs.forEach(tab => {
-        const tabEl = document.createElement('div');
-        tabEl.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
-        tabEl.dataset.id = tab.id;
+        let tabEl = tabElements.get(tab.id);
 
-        const titleEl = document.createElement('span');
-        titleEl.className = 'tab-title';
+        if (!tabEl) {
+            // Create New Tab Element
+            tabEl = document.createElement('div');
+            tabEl.dataset.id = tab.id;
+
+            const iconEl = document.createElement('img');
+            iconEl.className = 'tab-icon';
+            tabEl.appendChild(iconEl);
+
+            const titleEl = document.createElement('span');
+            titleEl.className = 'tab-title';
+            tabEl.appendChild(titleEl);
+
+            const closeEl = document.createElement('div');
+            closeEl.className = 'tab-close';
+            closeEl.textContent = '✕';
+            closeEl.onclick = (e) => {
+                e.stopPropagation();
+                window.bridge.closeTab(tab.id);
+            };
+            tabEl.appendChild(closeEl);
+
+            tabEl.onclick = () => {
+                window.bridge.switchTab(tab.id);
+            };
+
+            tabsList.appendChild(tabEl);
+            tabElements.set(tab.id, tabEl);
+        }
+
+        // Update Existing Element
+        tabEl.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
+
+        const titleEl = tabEl.querySelector('.tab-title');
         titleEl.textContent = tab.title || 'New Tab';
 
-        const closeEl = document.createElement('div');
-        closeEl.className = 'tab-close';
-        closeEl.textContent = '✕';
-        closeEl.onclick = (e) => {
-            e.stopPropagation(); // Prevent switching when closing
-            window.bridge.closeTab(tab.id);
-        };
-
-        const iconEl = document.createElement('img');
-        iconEl.className = 'tab-icon';
+        const iconEl = tabEl.querySelector('.tab-icon');
         const defaultIcon = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23b9bbbe"%3E%3Cpath d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/%3E%3C/svg%3E';
-        iconEl.src = tab.favicon || defaultIcon;
-        iconEl.onerror = () => { iconEl.src = defaultIcon; };
-
-        // Append order: Icon -> Title -> Close
-        tabEl.appendChild(iconEl);
-        tabEl.appendChild(titleEl);
-        tabEl.appendChild(closeEl);
-
-        tabEl.onclick = () => {
-            window.bridge.switchTab(tab.id);
-        };
-
-        tabsList.appendChild(tabEl);
+        const newFavicon = tab.favicon || defaultIcon;
+        if (iconEl.src !== newFavicon) {
+            iconEl.src = newFavicon;
+            iconEl.onerror = () => { iconEl.src = defaultIcon; };
+        }
     });
 
-    // Scroll to end (for new tabs)
-    // requestAnimationFrame ensures DOM is updated
+    // Ensure order matches tabs array
+    tabs.forEach((tab, index) => {
+        const el = tabElements.get(tab.id);
+        if (tabsList.children[index] !== el) {
+            tabsList.insertBefore(el, tabsList.children[index]);
+        }
+    });
+
+    // Auto scroll if needed
     requestAnimationFrame(() => {
-        tabsList.scrollLeft = tabsList.scrollWidth;
+        if (activeTabId) {
+            const activeEl = tabElements.get(activeTabId);
+            if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
     });
 }
 

@@ -13,6 +13,12 @@ let curWindow;
 let appUpdater;
 
 const createWindow = () => {
+    // Performance Switches
+    app.commandLine.appendSwitch('enable-gpu-rasterization');
+    app.commandLine.appendSwitch('enable-zero-copy');
+    app.commandLine.appendSwitch('ignore-gpu-blocklist');
+    app.commandLine.appendSwitch('disable-http-cache', 'false'); // Ensure cache is explicitly enabled
+
     curWindow = new MainWindow();
     appUpdater = new AppUpdater(curWindow);
 }

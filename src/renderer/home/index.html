@@ -20,47 +20,44 @@
             --font-main: 'Fredoka', sans-serif;
         }
 
-        body {
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             background-color: var(--bg-base);
             color: var(--text-primary);
-            display: flex;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
             font-family: var(--font-main);
+            overflow: hidden;
         }
 
         .search-container {
             width: 100%;
             height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             position: relative;
-            overflow: hidden;
+            box-sizing: border-box;
+            padding: 20px;
         }
 
         /* Top Section for Logo and Title */
-        .top-content {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 50%;
-            /* Occupy top half */
+        .brand-section {
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
-            /* Align near the center line */
             align-items: center;
-            padding-bottom: 80px;
-            /* Space between title and input */
-            box-sizing: border-box;
-            z-index: 10;
+            margin-bottom: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
         }
 
         h1 {
-            font-size: 6rem;
+            font-size: clamp(3rem, 10vw, 6rem);
             font-weight: 600;
             margin: 0;
-            /* Remove default margins */
             color: var(--text-primary);
             text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             letter-spacing: -2px;
@@ -69,39 +66,31 @@
 
         /* Logo Animation */
         #app-logo {
-            width: 120px;
-            height: 120px;
+            width: clamp(60px, 15vw, 120px);
+            height: clamp(60px, 15vw, 120px);
             margin-bottom: 20px;
             filter: drop-shadow(0 0 20px rgba(20, 170, 184, 0.2));
             animation: float 6s ease-in-out infinite;
         }
 
         @keyframes float {
-            0% {
+
+            0%,
+            100% {
                 transform: translateY(0px);
             }
 
             50% {
                 transform: translateY(-10px);
             }
-
-            100% {
-                transform: translateY(0px);
-            }
         }
 
-        /* Glassmorphism Search Box - Centered */
+        /* Glassmorphism Search Box */
         #search-form {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             width: 100%;
             max-width: 600px;
+            position: relative;
             z-index: 20;
-            padding: 0 20px;
-            /* Safety padding for mobile/small screens */
-            box-sizing: border-box;
         }
 
         #search-input {
@@ -110,16 +99,12 @@
             font-size: 1.2rem;
             font-family: var(--font-main);
             border-radius: 50px;
-            /* Pill shape */
             border: 2px solid transparent;
-
             background-color: rgba(0, 0, 0, 0.25);
             color: var(--text-primary);
-
             outline: none;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-
             box-sizing: border-box;
             backdrop-filter: blur(10px);
         }
@@ -141,28 +126,6 @@
             transform: translateY(-2px);
         }
 
-        /* Logo Animation */
-        #app-logo {
-            width: 120px;
-            height: 120px;
-            filter: drop-shadow(0 0 20px rgba(20, 170, 184, 0.2));
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-5px);
-            }
-
-            100% {
-                transform: translateY(0px);
-            }
-        }
-
         /* --- Footer Info --- */
         #version-info {
             position: absolute;
@@ -174,29 +137,24 @@
             pointer-events: none;
         }
 
-        /* İndirme İlerlemesi / Yeniden Başlatma Butonu - search.html içinde sağ altta */
         #download-status-area {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            bottom: 20px;
+            right: 20px;
             width: 250px;
-            height: 35px;
-            /* Buton için biraz daha yükseklik */
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            transition: all 0.3s ease;
             z-index: 9998;
             box-sizing: border-box;
-            /* Padding dahil boyuta etki etsin */
             padding: 0 5px;
-            /* İçerideki elemanlar için boşluk */
-            border-radius: 5px;
-            /* Kapsayıcıya da yuvarlak köşeler ver */
-            background-color: #555;
-            /* İlerleme çubuğu ile aynı arka plan */
+            border-radius: 8px;
+            background-color: var(--bg-dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         #download-status-area.active {
@@ -204,18 +162,16 @@
             visibility: visible;
         }
 
-        /* İlerleme Çubuğu Stilleri */
         #download-progress-bar {
             height: 100%;
-            background-color: #007bff;
-            /* Mavi ilerleme çubuğu */
+            background-color: var(--accent);
             width: 0%;
             transition: width 0.2s ease-out;
             position: absolute;
             left: 0;
             top: 0;
-            border-radius: 5px;
-            /* Köşeleri yuvarlak yap */
+            border-radius: 8px;
+            opacity: 0.3;
         }
 
         #download-progress-text {
@@ -226,23 +182,20 @@
             text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
         }
 
-        /* Yeniden Başlat Butonu Stilleri */
         #restart-button {
             background-color: #28a745;
-            /* Yeşil buton */
             color: white;
             border: none;
             padding: 8px 15px;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 14px;
             cursor: pointer;
             transition: background-color 0.2s ease;
             display: none;
-            /* Başlangıçta gizli */
             width: 100%;
-            /* Kapsayıcının tamamını kapla */
-            box-sizing: border-box;
             height: 100%;
+            position: relative;
+            z-index: 2;
         }
 
         #restart-button:hover {
@@ -253,10 +206,11 @@
 
 <body>
     <div class="search-container">
-        <div class="top-content">
+        <div class="brand-section">
             <img src="../../../assets/icon.ico" alt="Logo" id="app-logo">
             <h1>FURSOY</h1>
         </div>
+
         <form id="search-form">
             <input type="text" id="search-input" placeholder="Search Google..." autofocus>
         </form>
@@ -266,7 +220,7 @@
         <div id="download-status-area">
             <div id="download-progress-bar"></div>
             <span id="download-progress-text"></span>
-            <button id="restart-button" style="display: none;">Güncellemeyi Kur ve Yeniden Başlat</button>
+            <button id="restart-button">Güncellemeyi Kur ve Yeniden Başlat</button>
         </div>
     </div>
     <script defer src="./renderer.js"></script>
