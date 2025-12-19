@@ -42,6 +42,10 @@ class MainWindow {
             },
         });
 
+        // Set modern User-Agent globally for the main window content
+        const modernUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+        this.window.webContents.setUserAgent(modernUA);
+
         // Initialize Downloads View
         this.downloadsView = new BrowserView({
             webPreferences: {
@@ -384,6 +388,9 @@ class MainWindow {
         view.setBackgroundColor('#202124');
         // view.setAutoResize({ width: true, height: true }); // Manual resizing used instead for header offset precision
 
+        const modernUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+        view.webContents.setUserAgent(modernUA);
+
         const id = Date.now().toString();
         this.tabs.set(id, { view, id });
 
@@ -716,6 +723,88 @@ class MainWindow {
             this.saveDownloads();
             if (this.downloadsView && !this.downloadsView.webContents.isDestroyed()) {
                 this.downloadsView.webContents.send('set-downloads', []);
+            }
+        });
+
+        // Account Status Check
+        ipcMain.handle('google-login-status', async () => {
+            try {
+                const session = this.window.webContents.session;
+                const cookies = await session.cookies.get({ domain: '.google.com' });
+                const isLogged = cookies.some(c => c.name === 'SID' || c.name === 'HSID');
+
+                if (isLogged) {
+                    // Modern User-Agent for the background check to avoid 'old' page detection
+                    const modernUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+                    const profileData = await new Promise((resolve) => {
+                        const tempView = new BrowserView({
+                            webPreferences: {
+                                offscreen: true,
+                                contextIsolation: true,
+                                // Use the same session as the main window
+                                session: session
+                            }
+                        });
+
+                        tempView.webContents.setUserAgent(modernUA);
+
+                        const cleanup = () => {
+                            if (!tempView.webContents.isDestroyed()) {
+                                tempView.webContents.destroy();
+                            }
+                        };
+
+                        const timeout = setTimeout(() => {
+                            cleanup();
+                            resolve({ name: 'Google Hesabı', photo: null });
+                        }, 7000); // Slightly longer for stability
+
+                        tempView.webContents.on('did-finish-load', async () => {
+                            try {
+                                // We wait a bit for dynamic content if necessary
+                                const data = await tempView.webContents.executeJavaScript(`
+                                    (() => {
+                                        // Attempt to find profile picture and name in the new Google UI
+                                        const imgEl = document.querySelector('img[src*="googleusercontent.com"], img[src*="google.com/avatar"]');
+                                        const nameEl = document.querySelector('h1') || document.querySelector('[role="heading"]') || document.querySelector('.gb_A');
+                                        
+                                        return {
+                                            name: nameEl ? nameEl.innerText.split('\\n')[0].trim() : 'Google Kullanıcısı',
+                                            photo: imgEl ? imgEl.src : null
+                                        };
+                                    })()
+                                `);
+                                clearTimeout(timeout);
+                                cleanup();
+                                resolve(data);
+                            } catch (e) {
+                                clearTimeout(timeout);
+                                cleanup();
+                                resolve({ name: 'Google Hesabı', photo: null });
+                            }
+                        });
+
+                        // Avoid triggering unnecessary error logs
+                        tempView.webContents.on('did-fail-load', () => {
+                            clearTimeout(timeout);
+                            cleanup();
+                            resolve({ name: 'Google Hesabı', photo: null });
+                        });
+
+                        tempView.webContents.loadURL('https://myaccount.google.com/?hl=tr');
+                    });
+
+                    return {
+                        logged: true,
+                        name: profileData.name,
+                        email: 'Hesap Bağlı',
+                        photo: profileData.photo
+                    };
+                }
+                return { logged: false };
+            } catch (e) {
+                return { logged: false };
             }
         });
     }

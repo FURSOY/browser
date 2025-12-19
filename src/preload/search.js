@@ -19,6 +19,12 @@ let bridge = {
     onUpdateReadyToInstall: (callback) => ipcRenderer.on('update-ready-to-install', callback),
     // Uygulamayı yeniden başlatmak için main sürecine mesaj gönderme
     restartApp: () => ipcRenderer.send('restart-app'),
+
+    // Account Management
+    loginGoogle: () => ipcRenderer.send('navigate-to', 'https://accounts.google.com/signin'),
+    manageGoogle: () => ipcRenderer.send('navigate-to', 'https://myaccount.google.com/'),
+    logoutGoogle: () => ipcRenderer.send('navigate-to', 'https://accounts.google.com/Logout'),
+    checkLoginStatus: () => ipcRenderer.invoke('google-login-status'),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

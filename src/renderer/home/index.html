@@ -204,11 +204,170 @@
         #restart-button:hover {
             background-color: #218838;
         }
+
+        /* --- Profile Styles --- */
+        #profile-section {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #profile-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            padding: 0;
+            overflow: hidden;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #profile-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(20, 170, 184, 0.3);
+        }
+
+        #user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        #account-popup {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 300px;
+            background: var(--bg-dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: slideIn 0.2s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        #account-popup.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .popup-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #popup-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 2px solid var(--accent);
+        }
+
+        .user-info {
+            width: 100%;
+        }
+
+        #user-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        #user-email {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .popup-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .action-btn {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            font-weight: 600;
+        }
+
+        .action-btn.primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
     </style>
 </head>
 
 <body>
     <div class="search-container">
+        <!-- Profile Section -->
+        <div id="profile-section">
+            <button id="profile-btn" title="Google Hesabı">
+                <img id="user-avatar"
+                    src="https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png" alt="Profile">
+            </button>
+            <div id="account-popup">
+                <div class="popup-header">
+                    <img id="popup-avatar"
+                        src="https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png"
+                        alt="Avatar">
+                    <div class="user-info">
+                        <div id="user-name">Oturum Açılmadı</div>
+                        <div id="user-email">Google hesabınızla giriş yapın</div>
+                    </div>
+                </div>
+                <div class="popup-actions">
+                    <button id="login-google-btn" class="action-btn primary">Oturum Aç</button>
+                    <button id="manage-account-btn" class="action-btn">Hesabı Yönet</button>
+                    <button id="logout-btn" class="action-btn" style="display: none;">Oturum Kapat</button>
+                </div>
+            </div>
+        </div>
+
         <div class="brand-section">
             <img src="../../../assets/icon.ico" alt="Logo" id="app-logo">
             <h1>FURSOY</h1>

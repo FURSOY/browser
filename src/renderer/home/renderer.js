@@ -76,6 +76,79 @@ if (window.bridge) {
             }
         });
     }
+
+    // --- Profile Section Logic ---
+    const profileBtn = document.getElementById('profile-btn');
+    const accountPopup = document.getElementById('account-popup');
+    const loginGoogleBtn = document.getElementById('login-google-btn');
+    const manageAccountBtn = document.getElementById('manage-account-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const userNameEl = document.getElementById('user-name');
+    const userEmailEl = document.getElementById('user-email');
+
+    if (profileBtn && accountPopup) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            accountPopup.classList.toggle('active');
+            checkAccountStatus();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!accountPopup.contains(e.target) && !profileBtn.contains(e.target)) {
+                accountPopup.classList.remove('active');
+            }
+        });
+    }
+
+    if (loginGoogleBtn) {
+        loginGoogleBtn.addEventListener('click', () => {
+            window.bridge.loginGoogle();
+            accountPopup.classList.remove('active');
+        });
+    }
+
+    if (manageAccountBtn) {
+        manageAccountBtn.addEventListener('click', () => {
+            window.bridge.manageGoogle();
+            accountPopup.classList.remove('active');
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            window.bridge.logoutGoogle();
+            accountPopup.classList.remove('active');
+            setTimeout(checkAccountStatus, 1000);
+        });
+    }
+
+    async function checkAccountStatus() {
+        if (!window.bridge.checkLoginStatus) return;
+
+        const status = await window.bridge.checkLoginStatus();
+        const defaultAvatar = "https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png";
+
+        if (status.logged) {
+            userNameEl.textContent = status.name || "Google Hesabı Bağlı";
+            userEmailEl.textContent = status.email || "Oturum açık";
+            loginGoogleBtn.style.display = 'none';
+            logoutBtn.style.display = 'block';
+
+            const avatarUrl = status.photo || defaultAvatar;
+            document.getElementById('user-avatar').src = avatarUrl;
+            document.getElementById('popup-avatar').src = avatarUrl;
+        } else {
+            userNameEl.textContent = "Oturum Açılmadı";
+            userEmailEl.textContent = "Google hesabınızla giriş yapın";
+            loginGoogleBtn.style.display = 'block';
+            logoutBtn.style.display = 'none';
+            document.getElementById('user-avatar').src = defaultAvatar;
+            document.getElementById('popup-avatar').src = defaultAvatar;
+        }
+    }
+
+    // Initial check
+    checkAccountStatus();
 } else {
     console.error('window.bridge bulunamadı! searchPreload.js yüklenmemiş olabilir.');
 }
