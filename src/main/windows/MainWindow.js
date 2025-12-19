@@ -524,6 +524,9 @@ class MainWindow {
 
                 if (path.normalize(currentPath) === path.normalize(searchPath)) {
                     this.sendVersion(app.getVersion(), view);
+                    // Force logo update for home page tab favicon
+                    const iconPath = `file://${path.join(__dirname, "../../../assets/icon.ico")}`;
+                    this.window.webContents.send('tab-favicon-updated', { id, url: iconPath });
                 }
             }
         });
