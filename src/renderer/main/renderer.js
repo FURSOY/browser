@@ -234,9 +234,35 @@ if (starBtn) {
         const url = addressBar.value;
         const isFavorite = await window.bridge.checkFavorite(url);
 
+        let titleToUse = tab ? tab.title : '';
+
+        // If already favorited, get the saved title from favorites
+        if (isFavorite) {
+            const favorites = await window.bridge.getFavorites();
+            const savedFavorite = favorites.find(f => {
+                // Normalize URLs for comparison
+                const normalizeUrl = (u) => {
+                    try {
+                        let parsed = new URL(u);
+                        let normalized = parsed.origin + parsed.pathname;
+                        if (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
+                        return normalized.toLowerCase();
+                    } catch (e) {
+                        let res = u.trim();
+                        if (res.endsWith('/')) res = res.slice(0, -1);
+                        return res.toLowerCase();
+                    }
+                };
+                return normalizeUrl(f.url) === normalizeUrl(url);
+            });
+            if (savedFavorite && savedFavorite.title) {
+                titleToUse = savedFavorite.title;
+            }
+        }
+
         window.bridge.toggleBookmarksMenu({
             isOpen: true,
-            title: tab ? tab.title : '',
+            title: titleToUse,
             url: url,
             isFavorite: isFavorite
         });

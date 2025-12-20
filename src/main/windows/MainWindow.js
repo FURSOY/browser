@@ -190,19 +190,27 @@ class MainWindow {
 
     updateBookmarksViewBounds() {
         const { width } = this.window.getContentBounds();
-        const popupWidth = 260;
+        const popupWidth = 280;
+        const popupHeight = 170;
 
-        // Address bar is centered with max-width 800px
-        const maxBarWidth = 800;
-        const availableBarWidth = width - 400; // rough room for side buttons
-        const actualBarWidth = Math.min(maxBarWidth, availableBarWidth > 0 ? availableBarWidth : 300);
-        const barRight = Math.floor(width / 2) + Math.floor(actualBarWidth / 2);
+        // Navigation buttons on left: 4 buttons × 40px = ~160px
+        // Address container has margin: 0 16px (32px total)
+        // Downloads button on right: ~40px
+        // Total non-address space: ~232px
+
+        // Address bar right edge calculation:
+        // Window width - downloads btn (40px) - right margin (16px) = right edge of address container
+        const addressContainerRightEdge = width - 40 - 16;
+
+        // Star button is at right: 8px from the right edge of address container
+        // Popup should align to the right edge of the star button
+        const popupX = addressContainerRightEdge - popupWidth - 8;
 
         this.bookmarksView.setBounds({
-            x: barRight - popupWidth + 10,
-            y: 92,
+            x: Math.max(10, popupX),
+            y: 98, // Just below the address bar (48 tabs + 54 controls - small gap)
             width: popupWidth,
-            height: 160
+            height: popupHeight
         });
     }
 
