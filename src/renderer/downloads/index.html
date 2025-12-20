@@ -8,53 +8,81 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #202124;
-            --bg-item: #292a2d;
-            --text-primary: #e8eaed;
-            --text-secondary: #9aa0a6;
+            /* Main Browser Colors */
+            --bg-base: #202225;
+            --bg-header: #2f3136;
+            /* Slightly lighter for header */
+            --bg-hover: rgba(255, 255, 255, 0.04);
             --accent: #14aab8;
-            --border: rgba(255, 255, 255, 0.1);
+            --accent-hover: #118e9a;
+            --text-primary: #ffffff;
+            --text-secondary: #b9bbbe;
+            --text-tertiary: #72767d;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --font-main: 'Fredoka', sans-serif;
+
+            /* Reduced Radius */
+            --radius: 8px;
         }
 
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: 'Fredoka', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            overflow: hidden;
-            border-left: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            border-radius: 8px;
             box-sizing: border-box;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+            font-family: var(--font-main);
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-base);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        /* Header redesign */
         #header {
             padding: 12px 16px;
-            background-color: var(--bg-item);
-            border-bottom: 1px solid var(--border);
+            background-color: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
-            font-weight: 500;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        #header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         #clear-btn {
             font-size: 12px;
             color: var(--accent);
             cursor: pointer;
-            transition: opacity 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
         }
 
         #clear-btn:hover {
-            opacity: 0.8;
-            text-decoration: underline;
+            background: rgba(20, 170, 184, 0.1);
+            text-decoration: none;
         }
 
         #list {
@@ -63,45 +91,59 @@
             padding: 0;
         }
 
+        #list:empty::after {
+            content: 'İndirilen dosya yok';
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
         #list::-webkit-scrollbar {
             width: 8px;
         }
 
-        #list::-webkit-scrollbar-track {
-            background: transparent;
+        #list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
         }
 
-        #list::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+        #list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .item {
             display: flex;
             align-items: center;
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-            transition: background-color 0.15s;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.15s;
         }
 
         .item:hover {
-            background-color: rgba(255, 255, 255, 0.05);
+            background-color: var(--bg-hover);
         }
 
         .item:last-child {
-            border-bottom-left-radius: 12px;
+            border-bottom: none;
         }
 
+        /* Simplified Icon */
         .icon {
-            width: 32px;
-            height: 32px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            /* Matches modern UI */
             display: flex;
             align-items: center;
             justify-content: center;
             margin-right: 12px;
             font-size: 16px;
+            flex-shrink: 0;
+            color: var(--text-secondary);
         }
 
         .info {
@@ -111,18 +153,19 @@
 
         .name {
             font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 4px;
             color: var(--text-primary);
         }
 
         .progress-bg {
-            height: 4px;
+            height: 3px;
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1.5px;
             overflow: hidden;
             margin-bottom: 4px;
         }
@@ -130,7 +173,7 @@
         .progress-bar {
             height: 100%;
             width: 0%;
-            background-color: var(--accent);
+            background: var(--accent);
             transition: width 0.2s linear;
         }
 
@@ -152,72 +195,55 @@
             text-decoration: underline;
         }
 
-        .status.error {
-            color: #f44336;
-        }
-
-        .status.success {
-            color: #2ba060;
-        }
-
         .actions {
             display: flex;
             gap: 4px;
-            margin-left: 8px;
+            margin-left: 10px;
         }
 
         .icon-btn {
             background: transparent;
             border: none;
-            padding: 6px;
-            cursor: pointer;
-            border-radius: 4px;
             color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
         }
 
         .icon-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
         }
 
-        .icon-btn.cancel-btn:hover {
-            background-color: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-        }
-
         .icon-btn.delete-btn:hover {
-            background-color: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-        }
-
-        .icon-btn.pause-btn:hover {
-            background-color: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-        }
-
-        .icon-btn.resume-btn:hover {
-            background-color: rgba(43, 160, 96, 0.2);
-            color: #2ba060;
-        }
-
-        .icon-btn.folder-btn:hover {
-            background-color: rgba(20, 170, 184, 0.2);
-            color: var(--accent);
+            background: rgba(244, 67, 54, 0.1);
+            color: #ff4d4d;
         }
     </style>
 </head>
 
 <body>
-    <div id="header">
-        <span>İndirilenler</span>
+    <div class="container">
+        <div id="header">
+            <div id="header-title">
+                <span>⬇️</span>
+                <span>İndirilenler</span>
+            </div>
+            <span id="clear-btn" onclick="clearAll()">Temizle</span>
+        </div>
+        <div id="list"></div>
     </div>
-    <div id="list"></div>
+
     <script>
         const list = document.getElementById('list');
+
+        function clearAll() {
+            window.downloadsAPI.requestClearDownloads();
+        }
 
         function requestOpenFile(id) {
             window.downloadsAPI.requestOpenDownload(id);
@@ -231,81 +257,59 @@
             const div = document.createElement('div');
             div.className = 'item';
             div.id = `dl-${d.id}`;
-            div.dataset.paused = 'false';
 
             let progressHtml = `
                 <div class="progress-bg">
-                    <div class="progress-bar" style="width: ${d.progress || 0}%; ${isCompleted ? 'background-color:#2ba060' : (isFailed ? 'background-color:#f44336' : '')}"></div>
+                    <div class="progress-bar" style="width: ${d.progress || 0}%; ${isFailed ? 'background: #f44336;' : ''}"></div>
                 </div>
                 <div class="meta">
-                    <span class="status ${isCompleted ? 'success' : (isFailed ? 'error' : '')}">${isCompleted ? 'Tamamlandı' : (isFailed ? 'Başarısız' : (d.status === 'progressing' ? 'İndiriliyor...' : d.status))}</span>
-                    <span class="speed">${d.speed || ''}</span>
-                    <span class="size">${d.total && d.total > 0 ? formatBytes(d.downloaded) + '/' + formatBytes(d.total) : (d.downloaded > 0 ? formatBytes(d.downloaded) : '')}</span>
+                    <span class="status">${isCompleted ? 'Tamamlandı' : (isFailed ? 'Başarısız' : (d.status === 'progressing' ? '...' : d.status))}</span>
+                    ${isProgressing ? `<span class="speed">${d.speed || ''}</span>` : ''}
+                    <span class="size">${formatBytes(d.downloaded)}${d.total ? ' / ' + formatBytes(d.total) : ''}</span>
                 </div>
              `;
 
             if (isCompleted) {
                 progressHtml = `
-                    <div class="meta" style="margin-top:2px;">
+                    <div class="meta" style="margin-top:2px; display:flex; align-items:center;">
                         <span class="action-link" onclick="requestOpenFile('${d.id}')">Dosyayı Aç</span>
-                        <span class="size" style="margin-left:auto">${formatBytes(d.downloaded)}</span>
+                        <span class="size" style="margin-left:auto">${formatBytes(d.total || d.downloaded)}</span>
                     </div>
                  `;
             }
 
-            // Action buttons
+            // Icons
+            const iconPause = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+            const iconPlay = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+            const iconX = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+            const iconFolder = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+            const iconTrash = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
+
             let actionsHtml = '';
             if (isProgressing) {
-                // Only show pause if resumable
-                const pauseBtn = d.canResume ? `
-                    <button class="icon-btn pause-btn" onclick="pauseDownload('${d.id}')" title="Duraklat">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="6" y="4" width="4" height="16"/>
-                            <rect x="14" y="4" width="4" height="16"/>
-                        </svg>
-                    </button>
-                ` : '';
-
-                actionsHtml = `
-                    ${pauseBtn}
-                    <button class="icon-btn cancel-btn" onclick="cancelDownload('${d.id}')" title="İptal">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                    </button>
-                `;
+                if (d.canResume) {
+                    actionsHtml += `<button class="icon-btn" onclick="pauseDownload('${d.id}')" title="Duraklat">${iconPause}</button>`;
+                }
+                actionsHtml += `<button class="icon-btn" onclick="cancelDownload('${d.id}')" title="İptal">${iconX}</button>`;
             } else if (isCompleted) {
-                actionsHtml = `
-                    <button class="icon-btn folder-btn" onclick="showInFolder('${d.id}')" title="Klasörde Göster">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                        </svg>
-                    </button>
-                    <button class="icon-btn delete-btn" onclick="deleteDownload('${d.id}')" title="Sil">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            <line x1="10" y1="11" x2="10" y2="17"/>
-                            <line x1="14" y1="11" x2="14" y2="17"/>
-                        </svg>
-                    </button>
-                `;
+                actionsHtml += `<button class="icon-btn" onclick="showInFolder('${d.id}')" title="Klasörde">${iconFolder}</button>`;
+                actionsHtml += `<button class="icon-btn delete-btn" onclick="deleteDownload('${d.id}')" title="Sil">${iconTrash}</button>`;
+            } else if (isFailed) {
+                actionsHtml += `<button class="icon-btn delete-btn" onclick="deleteDownload('${d.id}')" title="Sil">${iconTrash}</button>`;
             }
 
             div.innerHTML = `
-                <div class="icon">⬇</div>
+                <div class="icon">📄</div>
                 <div class="info">
-                    <div class="name" title="${d.filename || ''}">${d.filename || 'Dosya'}</div>
+                    <div class="name" title="${d.filename}">${d.filename || 'Dosya'}</div>
                     ${progressHtml}
                 </div>
-                <div class="actions">
-                    ${actionsHtml}
-                </div>
-             `;
+                <div class="actions">${actionsHtml}</div>
+            `;
             return div;
         }
 
+        // ... FormatBytes and Handlers (same as before)
         function formatBytes(bytes) {
             if (!bytes || bytes === 0) return '0 B';
             const k = 1024;
@@ -313,70 +317,20 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
-
-        function pauseDownload(id) {
-            window.downloadsAPI.requestPauseDownload(id);
-            const el = document.getElementById(`dl-${id}`);
-            if (el) {
-                el.dataset.paused = 'true';
-                const pauseBtn = el.querySelector('.pause-btn');
-                if (pauseBtn) {
-                    pauseBtn.className = 'icon-btn resume-btn';
-                    pauseBtn.title = 'Devam Et';
-                    pauseBtn.onclick = () => resumeDownload(id);
-                    pauseBtn.innerHTML = `
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="5 3 19 12 5 21 5 3"/>
-                        </svg>
-                    `;
-                }
-            }
-        }
-
-        function resumeDownload(id) {
-            window.downloadsAPI.requestResumeDownload(id);
-            const el = document.getElementById(`dl-${id}`);
-            if (el) {
-                el.dataset.paused = 'false';
-                const resumeBtn = el.querySelector('.resume-btn');
-                if (resumeBtn) {
-                    resumeBtn.className = 'icon-btn pause-btn';
-                    resumeBtn.title = 'Duraklat';
-                    resumeBtn.onclick = () => pauseDownload(id);
-                    resumeBtn.innerHTML = `
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="6" y="4" width="4" height="16"/>
-                            <rect x="14" y="4" width="4" height="16"/>
-                        </svg>
-                    `;
-                }
-            }
-        }
-
-        function cancelDownload(id) {
-            window.downloadsAPI.requestCancelDownload(id);
-        }
-
-        function deleteDownload(id) {
-            window.downloadsAPI.requestDeleteDownload(id);
-        }
-
-        function showInFolder(id) {
-            window.downloadsAPI.requestShowInFolder(id);
-        }
+        function pauseDownload(id) { window.downloadsAPI.requestPauseDownload(id); }
+        function resumeDownload(id) { window.downloadsAPI.requestResumeDownload(id); }
+        function cancelDownload(id) { window.downloadsAPI.requestCancelDownload(id); }
+        function deleteDownload(id) { window.downloadsAPI.requestDeleteDownload(id); }
+        function showInFolder(id) { window.downloadsAPI.requestShowInFolder(id); }
 
         window.downloadsAPI.onSetDownloads((downloads) => {
             list.innerHTML = '';
             downloads.forEach(d => list.appendChild(createItemHTML(d)));
         });
 
-        window.downloadsAPI.onDownloadStarted(({ id, filename, canResume }) => {
-            // Check if already exists (to prevent duplicates)
-            const existing = document.getElementById(`dl-${id}`);
-            if (existing) return;
-
-            const d = { id, filename, status: 'progressing', progress: 0, downloaded: 0, total: 0, canResume };
-            list.prepend(createItemHTML(d));
+        window.downloadsAPI.onDownloadStarted((data) => {
+            const existing = document.getElementById(`dl-${data.id}`);
+            if (!existing) list.prepend(createItemHTML({ ...data, status: 'progressing', progress: 0, downloaded: 0, total: 0 }));
         });
 
         window.downloadsAPI.onDownloadProgress((data) => {
@@ -384,51 +338,21 @@
             if (el) {
                 const bar = el.querySelector('.progress-bar');
                 if (bar) bar.style.width = data.progress + '%';
-
                 const speed = el.querySelector('.speed');
                 if (speed) speed.textContent = data.speed;
-
                 const size = el.querySelector('.size');
-                if (size) size.textContent = formatBytes(data.downloaded) + '/' + formatBytes(data.total);
+                if (size) size.textContent = formatBytes(data.downloaded) + (data.total ? ' / ' + formatBytes(data.total) : '');
             }
         });
 
         window.downloadsAPI.onDownloadCompleted((data) => {
             const el = document.getElementById(`dl-${data.id}`);
-            if (el) {
-                // Use received data (which now includes total/downloaded)
-                const newItem = createItemHTML(data);
-                el.replaceWith(newItem);
-            }
+            if (el) el.replaceWith(createItemHTML(data));
         });
 
-        window.downloadsAPI.onDownloadFailed(({ id, state }) => {
-            const el = document.getElementById(`dl-${id}`);
-            if (el) {
-                const nameEl = el.querySelector('.name');
-                const filename = nameEl ? nameEl.textContent : 'Dosya';
-                const newItem = createItemHTML({ id, filename, status: 'failed', downloaded: 0, total: 0 });
-                el.replaceWith(newItem);
-            }
-        });
-
-        window.downloadsAPI.onDownloadCancelled(({ id }) => {
-            const el = document.getElementById(`dl-${id}`);
-            if (el) el.remove();
-        });
-
-        window.downloadsAPI.onDownloadDeleted(({ id }) => {
-            const el = document.getElementById(`dl-${id}`);
-            if (el) el.remove();
-        });
-
-        window.downloadsAPI.onDownloadPaused(({ id }) => {
-            // Already handled in pauseDownload function
-        });
-
-        window.downloadsAPI.onDownloadResumed(({ id }) => {
-            // Already handled in resumeDownload function
-        });
+        window.downloadsAPI.onDownloadFailed(({ id }) => { document.getElementById(`dl-${id}`)?.remove(); list.prepend(createItemHTML({ id, filename: 'Hata', status: 'failed' })); });
+        window.downloadsAPI.onDownloadCancelled(({ id }) => document.getElementById(`dl-${id}`)?.remove());
+        window.downloadsAPI.onDownloadDeleted(({ id }) => document.getElementById(`dl-${id}`)?.remove());
     </script>
 </body>
 

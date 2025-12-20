@@ -59,7 +59,7 @@ class MainWindow {
             }
         });
         this.downloadsView.webContents.loadURL(`file://${path.join(__dirname, '../../renderer/downloads/index.html')}`);
-        this.downloadsView.setBackgroundColor('#202124');
+        this.downloadsView.setBackgroundColor('#00000000'); // Transparent
 
         // Initialize Bookmarks View
         this.bookmarksView = new BrowserView({
@@ -70,7 +70,7 @@ class MainWindow {
             }
         });
         this.bookmarksView.webContents.loadURL(`file://${path.join(__dirname, '../../renderer/bookmarks/index.html')}`);
-        this.bookmarksView.setBackgroundColor('#202124');
+        this.bookmarksView.setBackgroundColor('#00000000'); // Transparent
 
         const mainPagePath = path.join(__dirname, '../../renderer/main/index.html');
         this.window.loadFile(mainPagePath);
@@ -222,6 +222,40 @@ class MainWindow {
             y: 105,
             width: 320,
             height: 450
+        });
+    }
+
+    updateBookmarksViewBounds() {
+        if (!this.bookmarksView || this.bookmarksView.webContents.isDestroyed()) return;
+        const { width } = this.window.getContentBounds();
+        const popupWidth = 300;
+        const popupHeight = 180;
+
+        // Address container right edge calculation
+        // Window width - downloads btn (40px) - right margin (16px)
+        const addressContainerRightEdge = width - 40 - 16;
+        const popupX = addressContainerRightEdge - popupWidth;
+
+        this.bookmarksView.setBounds({
+            x: Math.max(10, popupX),
+            y: 110, // Header (102px) + gap
+            width: popupWidth,
+            height: popupHeight
+        });
+    }
+
+    updateDownloadsViewBounds() {
+        if (!this.downloadsView || this.downloadsView.webContents.isDestroyed()) return;
+        const { width } = this.window.getContentBounds();
+        // Top right alignment
+        const popupWidth = 320;
+        const popupHeight = 450;
+
+        this.downloadsView.setBounds({
+            x: width - popupWidth - 10,
+            y: 110, // Header (102px) + gap
+            width: popupWidth,
+            height: popupHeight
         });
     }
 
