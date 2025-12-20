@@ -25,6 +25,10 @@ let bridge = {
     manageGoogle: () => ipcRenderer.send('navigate-to', 'https://myaccount.google.com/'),
     logoutGoogle: () => ipcRenderer.send('navigate-to', 'https://accounts.google.com/Logout'),
     checkLoginStatus: () => ipcRenderer.invoke('google-login-status'),
+
+    // Favorites (for Home page)
+    getFavorites: () => ipcRenderer.invoke('get-favorites'),
+    onFavoritesUpdated: (callback) => ipcRenderer.on('favorites-updated', callback),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

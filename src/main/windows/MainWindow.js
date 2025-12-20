@@ -12,7 +12,10 @@ class MainWindow {
     _onLoadCallback;
     downloads = [];
     downloadsPath = path.join(app.getPath('userData'), 'downloads.json');
+    favorites = [];
+    favoritesPath = path.join(app.getPath('userData'), 'favorites.json');
     downloadsView = null; // New BrowserView for Popup
+    bookmarksView = null; // New BrowserView for Favorites Popup
 
     position = {
         width: 1200,
@@ -58,12 +61,24 @@ class MainWindow {
         this.downloadsView.webContents.loadURL(`file://${path.join(__dirname, '../../renderer/downloads/index.html')}`);
         this.downloadsView.setBackgroundColor('#202124');
 
+        // Initialize Bookmarks View
+        this.bookmarksView = new BrowserView({
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                preload: path.join(__dirname, '../../preload/bookmarks.js')
+            }
+        });
+        this.bookmarksView.webContents.loadURL(`file://${path.join(__dirname, '../../renderer/bookmarks/index.html')}`);
+        this.bookmarksView.setBackgroundColor('#202124');
+
         const mainPagePath = path.join(__dirname, '../../renderer/main/index.html');
         this.window.loadFile(mainPagePath);
 
         this.window.webContents.once('did-finish-load', () => {
             console.log('Main HTML yüklendi.');
             this.loadDownloads();
+            this.loadFavorites();
             this.createTab();
             if (this._onLoadCallback) this._onLoadCallback();
         });
@@ -75,6 +90,7 @@ class MainWindow {
 
         this.window.webContents.on('focus', () => {
             if (this.isDownloadsPopupOpen) this.toggleDownloadsView(false);
+            if (this.isBookmarksPopupOpen) this.toggleBookmarksView(false);
         });
 
         this.window.on('resize', () => {
@@ -84,6 +100,9 @@ class MainWindow {
             }
             if (this.isDownloadsPopupOpen) {
                 this.updateDownloadsViewBounds();
+            }
+            if (this.isBookmarksPopupOpen) {
+                this.updateBookmarksViewBounds();
             }
         });
 
@@ -138,6 +157,53 @@ class MainWindow {
             this.window.removeBrowserView(this.downloadsView);
             this.isDownloadsPopupOpen = false;
         }
+    }
+
+    isBookmarksPopupOpen = false;
+
+    toggleBookmarksView(forceState = null, data = null) {
+        const shouldOpen = forceState !== null ? forceState : !this.isBookmarksPopupOpen;
+
+        if (shouldOpen) {
+            // Close other popups
+            this.toggleDownloadsView(false);
+
+            this.window.addBrowserView(this.bookmarksView);
+            this.updateBookmarksViewBounds();
+            this.window.setTopBrowserView(this.bookmarksView);
+
+            // Send current page data to fill input - wait a bit for popup to be ready
+            if (data) {
+                setTimeout(() => {
+                    if (!this.bookmarksView.webContents.isDestroyed()) {
+                        this.bookmarksView.webContents.send('set-bookmark-data', data);
+                    }
+                }, 100);
+            }
+            this.isBookmarksPopupOpen = true;
+        } else {
+            this.window.removeBrowserView(this.bookmarksView);
+            this.isBookmarksPopupOpen = false;
+        }
+    }
+
+
+    updateBookmarksViewBounds() {
+        const { width } = this.window.getContentBounds();
+        const popupWidth = 260;
+
+        // Address bar is centered with max-width 800px
+        const maxBarWidth = 800;
+        const availableBarWidth = width - 400; // rough room for side buttons
+        const actualBarWidth = Math.min(maxBarWidth, availableBarWidth > 0 ? availableBarWidth : 300);
+        const barRight = Math.floor(width / 2) + Math.floor(actualBarWidth / 2);
+
+        this.bookmarksView.setBounds({
+            x: barRight - popupWidth + 10,
+            y: 92,
+            width: popupWidth,
+            height: 160
+        });
     }
 
     updateDownloadsViewBounds() {
@@ -373,6 +439,79 @@ class MainWindow {
             this.saveDownloads();
             this.downloadsView.webContents.send('set-downloads', this.downloads);
         }
+    }
+
+    // --- FAVORITES MANAGEMENT ---
+    saveFavorites() { try { fs.writeFileSync(this.favoritesPath, JSON.stringify(this.favorites, null, 2)); } catch (e) { } }
+    loadFavorites() {
+        try {
+            if (fs.existsSync(this.favoritesPath)) {
+                const data = JSON.parse(fs.readFileSync(this.favoritesPath));
+                if (Array.isArray(data)) {
+                    // Migrate/Fix old entries: Ensure url exists and normalize
+                    this.favorites = data.filter(f => f && (f.url || f.link)).map(f => {
+                        return {
+                            ...f,
+                            url: f.url || f.link // Support old 'link' field if it existed
+                        };
+                    });
+                }
+            }
+        } catch (e) { this.favorites = []; }
+    }
+
+    normalizeUrl(u) {
+        if (!u) return '';
+        try {
+            let parsed = new URL(u);
+            let normalized = parsed.origin + parsed.pathname;
+            if (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
+            return normalized.toLowerCase();
+        } catch (e) {
+            let res = u.trim();
+            if (res.endsWith('/')) res = res.slice(0, -1);
+            return res.toLowerCase();
+        }
+    }
+
+    async toggleFavorite(data) {
+        const { url, title, remove } = data;
+        if (!url) return;
+        const normUrl = this.normalizeUrl(url);
+        const index = this.favorites.findIndex(f => this.normalizeUrl(f.url) === normUrl);
+
+        if (remove && index !== -1) {
+            this.favorites.splice(index, 1);
+        } else if (index !== -1) {
+            // Update existing
+            this.favorites[index].title = title;
+        } else {
+            // Add new with cached icon
+            let iconUrl = `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(url)}`;
+            let cachedIcon = iconUrl;
+
+            try {
+                const res = await fetch(iconUrl);
+                if (res.ok) {
+                    const buffer = await res.arrayBuffer();
+                    const contentType = res.headers.get('content-type');
+                    cachedIcon = `data:${contentType};base64,${Buffer.from(buffer).toString('base64')}`;
+                }
+            } catch (e) { }
+
+            this.favorites.push({ url, title, icon: cachedIcon });
+        }
+        this.saveFavorites();
+        this.broadcastFavorites();
+    }
+
+    broadcastFavorites() {
+        this.window.webContents.send('favorites-updated', this.favorites);
+        this.tabs.forEach(tab => {
+            if (!tab.view.webContents.isDestroyed()) {
+                tab.view.webContents.send('favorites-updated', this.favorites);
+            }
+        });
     }
 
     createTab(urlToLoad) {
@@ -662,7 +801,21 @@ class MainWindow {
         ipcMain.on('tab-new', (e, u) => this.createTab(u));
         ipcMain.on('tab-switch', (e, i) => this.switchTab(i));
         ipcMain.on('tab-close', (e, i) => this.closeTab(i));
-        ipcMain.on('navigate-to', (e, u) => { if (this.activeTabId) this.tabs.get(this.activeTabId).view.webContents.loadURL(u); });
+
+        ipcMain.on('toggle-favorite', (e, data) => this.toggleFavorite(data));
+        ipcMain.handle('check-favorite', (e, url) => {
+            const normUrl = this.normalizeUrl(url);
+            return this.favorites.some(f => this.normalizeUrl(f.url) === normUrl);
+        });
+        ipcMain.handle('get-favorites', () => {
+            return this.favorites;
+        });
+
+        ipcMain.on('navigate-to', (e, u) => {
+            if (this.activeTabId && u) {
+                this.tabs.get(this.activeTabId).view.webContents.loadURL(u);
+            }
+        });
         ipcMain.on('nav-back', () => { if (this.activeTabId) { const v = this.tabs.get(this.activeTabId).view; if (v.webContents.canGoBack()) v.webContents.goBack(); } });
         ipcMain.on('nav-forward', () => { if (this.activeTabId) { const v = this.tabs.get(this.activeTabId).view; if (v.webContents.canGoForward()) v.webContents.goForward(); } });
         ipcMain.on('nav-reload', () => { if (this.activeTabId) this.tabs.get(this.activeTabId).view.webContents.reload(); });
@@ -685,13 +838,20 @@ class MainWindow {
         // Downloads Toggle (Updated)
         // IPC from renderer button
         ipcMain.on('set-downloads-menu', (event, isOpen) => {
-            // renderer sends true/false based on its toggle logic? 
-            // Actually, renderer button just clicks. We can control state here mostly.
-            // If we rely on renderer to say 'open', we treat it as toggle request.
-            // But simpler: Renderer sends 'toggle-downloads'.
-            // Renderer code is: window.bridge.setDownloadsMenuState(isActive).
-            // Let's interpret 'isActive' as desired state.
             this.toggleDownloadsView(isOpen);
+        });
+
+        ipcMain.on('toggle-bookmarks-menu', (event, data) => {
+            this.toggleBookmarksView(data.isOpen, data);
+        });
+
+        ipcMain.on('bookmark-save-request', (event, data) => {
+            this.toggleFavorite(data);
+            this.toggleBookmarksView(false);
+        });
+
+        ipcMain.on('bookmark-popup-close', () => {
+            this.toggleBookmarksView(false);
         });
 
         ipcMain.on('open-download', (event, id) => {

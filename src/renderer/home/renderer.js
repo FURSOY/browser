@@ -149,6 +149,40 @@ if (window.bridge) {
 
     // Initial check
     checkAccountStatus();
+
+    // --- Favorites Logic ---
+    const favoritesContainer = document.getElementById('favorites-container');
+
+    async function renderFavorites() {
+        if (!favoritesContainer || !window.bridge.getFavorites) return;
+
+        const favorites = await window.bridge.getFavorites();
+        favoritesContainer.innerHTML = '';
+
+        favorites.forEach(fav => {
+            const item = document.createElement('div');
+            item.className = 'favorite-item';
+            item.setAttribute('data-title', fav.title);
+
+            const img = document.createElement('img');
+            img.src = fav.icon || 'https://www.google.com/s2/favicons?sz=64&domain_url=' + fav.url;
+            img.onerror = () => { img.src = '../../../assets/icon.ico'; };
+
+            item.appendChild(img);
+            item.onclick = () => window.bridge.navigateTo(fav.url);
+
+            favoritesContainer.appendChild(item);
+        });
+    }
+
+    if (window.bridge.onFavoritesUpdated) {
+        window.bridge.onFavoritesUpdated(() => {
+            renderFavorites();
+        });
+    }
+
+    // Load initial favorites
+    renderFavorites();
 } else {
     console.error('window.bridge bulunamadı! searchPreload.js yüklenmemiş olabilir.');
 }

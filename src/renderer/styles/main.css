@@ -271,28 +271,58 @@ body {
     transform: translateY(0);
 }
 
-#address-bar {
-    -webkit-app-region: no-drag;
+#address-container {
     flex-grow: 1;
     margin: 0 16px;
-    padding: 0 20px;
-    height: 36px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    -webkit-app-region: no-drag;
+}
 
+#address-bar {
+    width: 100%;
+    padding: 0 45px 0 20px;
+    /* Extra padding for star btn */
+    height: 36px;
     border: 1px solid transparent;
     border-radius: 18px;
-    /* Pill shape */
-
     background-color: rgba(0, 0, 0, 0.2);
-    /* Darker pill on background */
     color: var(--text-primary);
     font-family: var(--font-main);
     font-size: 14px;
     font-weight: 400;
-    letter-spacing: 0.5px;
-
     outline: none;
     transition: all 0.2s ease;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#star-btn {
+    position: absolute;
+    right: 8px;
+    width: 28px !important;
+    height: 28px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: var(--text-secondary);
+    border-radius: 50% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#star-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--accent);
+}
+
+#star-btn.active {
+    color: #ffcc00 !important;
+    /* Gold for active bookmark */
+    fill: #ffcc00;
 }
 
 #address-bar:hover {
@@ -303,6 +333,69 @@ body {
     background-color: rgba(0, 0, 0, 0.4);
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+#bookmark-popup {
+    position: absolute;
+    top: 45px;
+    right: 0;
+    width: 240px;
+    background: var(--bg-dark);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-m);
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1001;
+    backdrop-filter: blur(10px);
+}
+
+#bookmark-popup.active {
+    display: flex;
+}
+
+.popup-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#bookmark-name {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-s);
+    color: white;
+    font-size: 13px;
+    outline: none;
+}
+
+#bookmark-name:focus {
+    border-color: var(--accent);
+}
+
+.popup-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.popup-buttons button {
+    height: 30px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    width: auto !important;
+}
+
+#save-bookmark-btn {
+    background: var(--accent) !important;
+    color: white !important;
+}
+
+#save-bookmark-btn:hover {
+    background: var(--accent-hover) !important;
 }
 
 #address-bar::placeholder {

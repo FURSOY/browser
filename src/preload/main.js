@@ -55,6 +55,13 @@ let bridge = {
 
     // Favicon
     onTabFaviconUpdated: (callback) => ipcRenderer.on('tab-favicon-updated', callback),
+
+    // Favorites
+    toggleFavorite: (url, title) => ipcRenderer.send('toggle-favorite', { url, title }),
+    checkFavorite: (url) => ipcRenderer.invoke('check-favorite', url),
+    getFavorites: () => ipcRenderer.invoke('get-favorites'),
+    onFavoritesUpdated: (callback) => ipcRenderer.on('favorites-updated', callback),
+    toggleBookmarksMenu: (data) => ipcRenderer.send('toggle-bookmarks-menu', data),
 };
 
 contextBridge.exposeInMainWorld("bridge", bridge);

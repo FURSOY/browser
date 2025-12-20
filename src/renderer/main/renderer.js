@@ -113,6 +113,7 @@ window.bridge.onTabUpdated((event, { id, title }) => {
 window.bridge.onActiveTabChanged((event, id) => {
     activeTabId = id;
     renderTabs();
+    updateStarIcon();
 });
 
 window.bridge.onTabFaviconUpdated((event, { id, url }) => {
@@ -121,6 +122,10 @@ window.bridge.onTabFaviconUpdated((event, { id, url }) => {
         tab.favicon = url;
         renderTabs();
     }
+});
+
+window.bridge.onFavoritesUpdated(() => {
+    updateStarIcon();
 });
 
 
@@ -182,10 +187,67 @@ if (homeBtn) {
     });
 }
 
+// --- Star Button & Bookmark Popup Logic ---
+const starBtn = document.getElementById('star-btn');
+const bookmarkPopup = document.getElementById('bookmark-popup');
+const bookmarkNameInput = document.getElementById('bookmark-name');
+const saveBookmarkBtn = document.getElementById('save-bookmark-btn');
+const cancelBookmarkBtn = document.getElementById('cancel-bookmark-btn');
+
+async function updateStarIcon() {
+    if (!starBtn || !addressBar) return;
+    const currentUrl = addressBar.value;
+    if (!currentUrl || currentUrl.trim() === '') {
+        // No URL, show empty star
+        starBtn.classList.remove('active');
+        const svg = starBtn.querySelector('svg');
+        if (svg) {
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+        }
+        return;
+    }
+
+    const isFavorite = await window.bridge.checkFavorite(currentUrl);
+    const svg = starBtn.querySelector('svg');
+
+    if (isFavorite) {
+        starBtn.classList.add('active');
+        if (svg) {
+            svg.setAttribute('fill', '#ffcc00');
+            svg.setAttribute('stroke', '#ffcc00');
+        }
+    } else {
+        starBtn.classList.remove('active');
+        if (svg) {
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+        }
+    }
+}
+
+
+if (starBtn) {
+    starBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const tab = tabs.find(t => t.id === activeTabId);
+        const url = addressBar.value;
+        const isFavorite = await window.bridge.checkFavorite(url);
+
+        window.bridge.toggleBookmarksMenu({
+            isOpen: true,
+            title: tab ? tab.title : '',
+            url: url,
+            isFavorite: isFavorite
+        });
+    });
+}
+
 // --- Address Bar Sync Logic ---
-window.bridge.onURLUpdate((event, url) => {
+window.bridge.onURLUpdate(async (event, url) => {
     if (addressBar) {
         addressBar.value = url;
+        updateStarIcon();
     }
 });
 

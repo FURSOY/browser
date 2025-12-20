@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #18191c;
+            --accent: #14aab8;
+            --accent-hover: #118e9a;
+            --text-primary: #ffffff;
+            --text-secondary: #b9bbbe;
+            --font-main: 'Fredoka', sans-serif;
+            --radius-m: 8px;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-m);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 100vh;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            outline: none;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #save-btn {
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+        }
+
+        #save-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        #cancel-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+        }
+
+        #cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title" id="popup-title">Favoriye Ekle</div>
+    <input type="text" id="bookmark-name" placeholder="Başlık girin..." autofocus>
+    <div class="buttons">
+        <button id="remove-btn" style="display: none; background: #dc3545; color: white;">Kaldır</button>
+        <button id="cancel-btn">İptal</button>
+        <button id="save-btn">Kaydet</button>
+    </div>
+    <script>
+        const nameInput = document.getElementById('bookmark-name');
+        const saveBtn = document.getElementById('save-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const removeBtn = document.getElementById('remove-btn');
+        const titleEl = document.getElementById('popup-title');
+
+        // Listen to IPC from main process
+        if (window.electronAPI) {
+            window.electronAPI.receive('set-bookmark-data', (data) => {
+                nameInput.value = data.title || '';
+                nameInput.focus();
+                nameInput.select();
+                window.currentUrl = data.url;
+
+                if (data.isFavorite) {
+                    titleEl.textContent = 'Favoriyi Düzenle';
+                    removeBtn.style.display = 'block';
+                    saveBtn.textContent = 'Güncelle';
+                } else {
+                    titleEl.textContent = 'Favoriye Ekle';
+                    removeBtn.style.display = 'none';
+                    saveBtn.textContent = 'Kaydet';
+                }
+            });
+        }
+
+        saveBtn.onclick = () => {
+            const title = nameInput.value.trim() || window.currentUrl;
+            window.bridge.saveBookmark(window.currentUrl, title);
+        };
+
+        removeBtn.onclick = () => {
+            window.bridge.removeBookmark(window.currentUrl);
+        };
+
+        cancelBtn.onclick = () => {
+            window.bridge.closePopup();
+        };
+
+        // Handle Enter key
+        nameInput.onkeydown = (e) => {
+            if (e.key === 'Enter') saveBtn.onclick();
+            if (e.key === 'Escape') cancelBtn.onclick();
+        };
+    </script>
+</body>
+
+</html>
